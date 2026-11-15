@@ -94,8 +94,16 @@ class L:
             "en": "Thank you for installing!",
         },
         "install_card_msg": {
-            "ru": "Спасибо за установку плагина!\n\nАвтор плагинов: @MaxExteraPlugins.\nВсе новости, обновления и новые релизы смотрите в нашем официальном канале.",
-            "en": "Thank you for installing the plugin!\n\nAuthor: @MaxExteraPlugins.\nCheck out our official channel for news and updates.",
+            "ru": (
+                "Надеемся, что плагин будет вам полезен!\n\n"
+                "Мы делаем плагины бесплатными и доступными для всех: пожалуйста, поддержите нас подпиской. "
+                "Там будут только важные новости, обновления и розыгрыши."
+            ),
+            "en": (
+                "We hope this plugin will be useful to you!\n\n"
+                "We keep our plugins free and open for everyone: please support us with a subscription. "
+                "We only post key news, updates, and giveaways."
+            ),
         },
         "subscribe_btn": {
             "ru": "Подписаться",
@@ -114,12 +122,24 @@ class L:
             "en": "Please subscribe to the channel",
         },
         "trial_expired_msg": {
-            "ru": "Пожалуйста, подпишитесь на наш официальный канал.\n\nМы делаем плагины бесплатно, ничего не требуя взамен. До подписки функции плагина временно приостановлены.",
-            "en": "Please subscribe to our official channel.\n\nWe build plugins for free and ask nothing in return. Plugin features are paused until you subscribe.",
+            "ru": (
+                "Пожалуйста, подпишитесь на наш официальный канал.\n\n"
+                "Мы делаем плагины бесплатно, ничего не требуя взамен. "
+                "До подписки функции плагина временно приостановлены."
+            ),
+            "en": (
+                "Please subscribe to our official channel.\n\n"
+                "We develop plugins for free and ask nothing in return. "
+                "Plugin features are paused until you subscribe."
+            ),
         },
         "sub_thank_you": {
-            "ru": "🎉 Спасибо за подписку на наш канал! Плагин полностью активен.",
-            "en": "🎉 Thank you for subscribing! Plugin is fully active.",
+            "ru": "Спасибо за подписку на наш канал!",
+            "en": "Thank you for subscribing to our channel!",
+        },
+        "sub_thank_you_after_expired": {
+            "ru": "Спасибо за подписку на наш канал!\nПлагин продолжит работать без ограничений",
+            "en": "Thank you for subscribing to our channel!\nThe plugin will continue working without restrictions",
         },
         "sub_not_found": {
             "ru": "Подписка не обнаружена. Пожалуйста, подпишитесь на канал.",
@@ -259,6 +279,71 @@ class DeleteFromGalleryPlugin(BasePlugin):
         return items
 
     # ============================================================
+    # Top Card Icon View (Plugin Sticker / Icon)
+    # ============================================================
+    def _create_card_icon_view(self, act):
+        try:
+            from android.widget import FrameLayout, ImageView, TextView
+            from android.view import Gravity
+            from android.graphics.drawable import GradientDrawable
+            from org.telegram.messenger import AndroidUtilities, UserConfig, MediaDataController, ImageLocation, R
+            from org.telegram.ui.ActionBar import Theme
+            from org.telegram.ui.Components import BackupImageView
+
+            dp = AndroidUtilities.dp
+            container = FrameLayout(act)
+            container.setPadding(0, dp(20), 0, dp(4))
+
+            size = dp(68)
+            box = FrameLayout(act)
+
+            bg = GradientDrawable()
+            accent = Theme.getColor(Theme.key_featuredStickers_addButton)
+            bg.setColor(accent)
+            bg.setCornerRadius(float(dp(20)))
+            box.setBackground(bg)
+
+            loaded = False
+            try:
+                acc = int(UserConfig.selectedAccount)
+                mdc = MediaDataController.getInstance(acc)
+                pack = "MaxExteraPluginsStickers"
+                sticker_set = mdc.getStickerSetByName(pack)
+                if sticker_set is not None and sticker_set.documents is not None and sticker_set.documents.size() > 23:
+                    doc = sticker_set.documents.get(23)
+                    iv = BackupImageView(act)
+                    iv.setRoundRadius(dp(20))
+                    iv.setImage(ImageLocation.getForDocument(doc), "68_68", None, None, sticker_set)
+                    box.addView(iv, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
+                    loaded = True
+                else:
+                    mdc.loadStickersByEmojiOrName(pack, False, True)
+            except Exception:
+                pass
+
+            if not loaded:
+                try:
+                    iv = ImageView(act)
+                    iv.setImageResource(R.drawable.msg_delete)
+                    iv.setColorFilter(Theme.getColor(Theme.key_windowBackgroundWhite))
+                    pad = dp(16)
+                    iv.setPadding(pad, pad, pad, pad)
+                    box.addView(iv, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
+                except Exception:
+                    tv = TextView(act)
+                    tv.setText("🗑️")
+                    tv.setTextSize(26.0)
+                    tv.setGravity(Gravity.CENTER)
+                    box.addView(tv, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
+
+            lp = FrameLayout.LayoutParams(size, size, Gravity.CENTER_HORIZONTAL)
+            container.addView(box, lp)
+            return container
+        except Exception as e:
+            self.log(f"[DeleteFromGallery] Create card icon error: {e}")
+            return None
+
+    # ============================================================
     # Subscription & Trial Check
     # ============================================================
     def _resolve_channel_in_telegram(self, username: str):
@@ -326,6 +411,11 @@ class DeleteFromGalleryPlugin(BasePlugin):
             self.log(f"[DeleteFromGallery] is_subscribed error: {e}")
         return False
 
+    def _notify_subscribed(self, was_expired=False):
+        self.set_setting("was_subscribed", True)
+        msg_key = "sub_thank_you_after_expired" if was_expired else "sub_thank_you"
+        BulletinHelper.show_success(L.g(msg_key))
+
     def _check_initial_subscription_flow(self):
         def flow():
             try:
@@ -340,8 +430,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
 
                 if is_sub:
                     if not was_sub:
-                        self.set_setting("was_subscribed", True)
-                        BulletinHelper.show_success(L.g("sub_thank_you"))
+                        self._notify_subscribed(was_expired=False)
                     return
 
                 # User is NOT subscribed
@@ -353,13 +442,10 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 trial_sec = trial_days * 86400.0
                 last_remind = float(self.get_setting("last_remind_time", 0.0) or 0.0)
 
-                # If within trial period (< 7 days)
                 if (now - install_time) < trial_sec:
-                    # Show card at first run or if 1 week passed since last remind
                     if last_remind <= 0 or (now - last_remind) >= trial_sec:
                         self._show_welcome_card()
                 else:
-                    # Trial expired!
                     self._show_expired_card()
 
             except Exception as e:
@@ -370,8 +456,9 @@ class DeleteFromGalleryPlugin(BasePlugin):
     def is_feature_allowed(self) -> bool:
         if self.is_subscribed_to_channel():
             if not self.get_setting("was_subscribed", False):
-                self.set_setting("was_subscribed", True)
-                BulletinHelper.show_success(L.g("sub_thank_you"))
+                was_expired = bool(self.get_setting("was_expired_state", False))
+                self.set_setting("was_expired_state", False)
+                self._notify_subscribed(was_expired=was_expired)
             return True
 
         now = time.time()
@@ -386,7 +473,8 @@ class DeleteFromGalleryPlugin(BasePlugin):
         if (now - install_time) < trial_sec:
             return True
 
-        # Trial expired
+        # Trial expired - record expired state and block
+        self.set_setting("was_expired_state", True)
         self._show_expired_card()
         return False
 
@@ -394,35 +482,37 @@ class DeleteFromGalleryPlugin(BasePlugin):
         def show():
             try:
                 frag = get_last_fragment()
-                if not frag:
-                    return
+                if not frag: return
                 act = frag.getParentActivity()
-                if not act:
-                    return
+                if not act: return
 
-                from ui.alert import AlertDialogBuilder
+                from org.telegram.ui.ActionBar import AlertDialog
                 links = self._get_links()
                 url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
 
-                b = AlertDialogBuilder(act)
-                b.set_title(L.g("install_card_title"))
-                b.set_message(L.g("install_card_msg"))
+                b = AlertDialog.Builder(act)
+                top_view = self._create_card_icon_view(act)
+                if top_view is not None:
+                    b.setTopView(top_view)
+                    b.notDrawBackgroundOnTopView(True)
+
+                b.setTitle(L.g("install_card_title"))
+                b.setMessage(L.g("install_card_msg"))
 
                 def on_sub(d, w):
                     d.dismiss()
                     self._open_url(url)
                     def check_after():
                         if self.is_subscribed_to_channel():
-                            self.set_setting("was_subscribed", True)
-                            BulletinHelper.show_success(L.g("sub_thank_you"))
+                            self._notify_subscribed(was_expired=False)
                     run_on_ui_thread(check_after, 3500)
 
                 def on_later(d, w):
                     d.dismiss()
                     self.set_setting("last_remind_time", time.time())
 
-                b.set_positive_button(L.g("subscribe_btn"), on_sub)
-                b.set_negative_button(L.g("remind_later_btn"), on_later)
+                b.setPositiveButton(L.g("subscribe_btn"), on_sub)
+                b.setNegativeButton(L.g("remind_later_btn"), on_later)
                 b.show()
             except Exception as e:
                 self.log(f"[DeleteFromGallery] Welcome card error: {e}")
@@ -433,40 +523,41 @@ class DeleteFromGalleryPlugin(BasePlugin):
         def show():
             try:
                 frag = get_last_fragment()
-                if not frag:
-                    return
+                if not frag: return
                 act = frag.getParentActivity()
-                if not act:
-                    return
+                if not act: return
 
-                from ui.alert import AlertDialogBuilder
+                from org.telegram.ui.ActionBar import AlertDialog
                 links = self._get_links()
                 url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
 
-                b = AlertDialogBuilder(act)
-                b.set_title(L.g("trial_expired_title"))
-                b.set_message(L.g("trial_expired_msg"))
+                b = AlertDialog.Builder(act)
+                top_view = self._create_card_icon_view(act)
+                if top_view is not None:
+                    b.setTopView(top_view)
+                    b.notDrawBackgroundOnTopView(True)
+
+                b.setTitle(L.g("trial_expired_title"))
+                b.setMessage(L.g("trial_expired_msg"))
 
                 def on_sub(d, w):
                     d.dismiss()
                     self._open_url(url)
                     def check_after():
                         if self.is_subscribed_to_channel():
-                            self.set_setting("was_subscribed", True)
-                            BulletinHelper.show_success(L.g("sub_thank_you"))
+                            self._notify_subscribed(was_expired=True)
                     run_on_ui_thread(check_after, 3500)
 
                 def on_check(d, w):
                     d.dismiss()
                     if self.is_subscribed_to_channel():
-                        self.set_setting("was_subscribed", True)
-                        BulletinHelper.show_success(L.g("sub_thank_you"))
+                        self._notify_subscribed(was_expired=True)
                     else:
                         BulletinHelper.show_error(L.g("sub_not_found"))
                         self._show_expired_card()
 
-                b.set_positive_button(L.g("subscribe_btn"), on_sub)
-                b.set_negative_button(L.g("check_sub_btn"), on_check)
+                b.setPositiveButton(L.g("subscribe_btn"), on_sub)
+                b.setNegativeButton(L.g("check_sub_btn"), on_check)
                 b.show()
             except Exception as e:
                 self.log(f"[DeleteFromGallery] Expired card error: {e}")
