@@ -6,7 +6,7 @@ __description__ = (
     "Добавляет кнопки «Удалить с устройства» и «Отправить и удалить» в меню выбора медиа."
 )
 __author__ = "@itNotMax - @MaxExteraPlugins"
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 __icon__ = "MaxExteraPluginsStickers/23"
 __min_version__ = "12.10.6"
 __app_version__ = ">=12.10.6"
@@ -279,39 +279,54 @@ class DeleteFromGalleryPlugin(BasePlugin):
     # ============================================================
     def create_settings(self) -> List[Any]:
         links = self._get_links()
-        channel_url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
-        donate_url = links.get("donate_url", "https://t.me/itNotMax")
-        bug_url = links.get("bug_report_url", "https://t.me/itNotMax")
-        username = links.get("channel_username", "MaxExteraPlugins")
+        channel_url = str(links.get("channel_url") or "").strip()
+        donate_url = str(links.get("donate_url") or "").strip()
+        bug_url = str(links.get("bug_report_url") or "").strip()
 
-        def open_channel(v=None):
-            self._open_url(channel_url, v)
+        author_items = []
 
-        def open_donate(v=None):
-            self._open_url(donate_url, v)
+        if channel_url:
+            def open_channel(v=None, url=channel_url):
+                self._open_url(url, v)
 
-        def open_bug(v=None):
-            self._open_url(bug_url, v)
+            author_items.append(
+                Text(
+                    text=L.g("settings_channel"),
+                    icon="msg_channel",
+                    on_click=open_channel,
+                )
+            )
 
-        items = [
-            Header(text="MaxExteraPlugins"),
-            Text(
-                text=L.g("settings_channel"),
-                icon="msg_channel",
-                on_click=open_channel,
-            ),
-            Text(
-                text=L.g("settings_donate"),
-                icon="msg_share",
-                on_click=open_donate,
-            ),
-            Text(
-                text=L.g("settings_bug_report"),
-                icon="msg_help",
-                on_click=open_bug,
-            ),
-            Divider(),
-        ]
+        if donate_url:
+            def open_donate(v=None, url=donate_url):
+                self._open_url(url, v)
+
+            author_items.append(
+                Text(
+                    text=L.g("settings_donate"),
+                    icon="msg_share",
+                    on_click=open_donate,
+                )
+            )
+
+        if bug_url:
+            def open_bug(v=None, url=bug_url):
+                self._open_url(url, v)
+
+            author_items.append(
+                Text(
+                    text=L.g("settings_bug_report"),
+                    icon="msg_help",
+                    on_click=open_bug,
+                )
+            )
+
+        items = []
+        if author_items:
+            items.append(Header(text="MaxExteraPlugins"))
+            items.extend(author_items)
+            items.append(Divider())
+
         return items
 
     # ============================================================
