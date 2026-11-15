@@ -78,12 +78,12 @@ class L:
             "en": "Could not delete files",
         },
         "settings_channel": {
-            "ru": "📢 Канал автора",
-            "en": "📢 Author's Channel",
+            "ru": "Канал автора",
+            "en": "Author's Channel",
         },
         "settings_donate": {
-            "ru": "☕ Поддержать автора",
-            "en": "☕ Support the author",
+            "ru": "Поддержать автора",
+            "en": "Support author",
         },
         "settings_donate_sub": {
             "ru": "Донат на развитие и поддержку плагинов",

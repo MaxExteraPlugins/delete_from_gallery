@@ -1,12 +1,12 @@
-# Delete From Gallery
+# delete_from_gallery
 
 <p align="center">
   <a href="README_EN.md"><b>English version</b></a> | <b>Русская версия</b>
 </p>
 
 <p align="center">
-  <a href="https://github.com/MaxExteraPlugins/DeleteFromGallery/releases/latest">
-    <img src="https://img.shields.io/github/v/release/MaxExteraPlugins/DeleteFromGallery?style=flat-square&color=blue" alt="Версия релиза"/>
+  <a href="https://github.com/MaxExteraPlugins/delete_from_gallery/releases/latest">
+    <img src="https://img.shields.io/github/v/release/MaxExteraPlugins/delete_from_gallery?style=flat-square&color=blue" alt="Версия релиза"/>
   </a>
   <img src="https://img.shields.io/badge/exteraGram-%3E%3D12.10.6-orange?style=flat-square" alt="exteraGram"/>
   <img src="https://img.shields.io/badge/AyuGram-%3E%3D12.10.6-blueviolet?style=flat-square" alt="AyuGram"/>
@@ -36,7 +36,7 @@
 
 ## 📥 Установка
 
-1. Перейдите во вкладку [**Releases**](https://github.com/MaxExteraPlugins/DeleteFromGallery/releases/latest).
+1. Перейдите во вкладку [**Releases**](https://github.com/MaxExteraPlugins/delete_from_gallery/releases/latest).
 2. Скачайте файл плагина формата `delete_from_gallery_vX.X.X.plugin`.
 3. Отправьте файл в Telegram (в «Избранное») или откройте его через проводник в exteraGram / AyuGram.
 4. Нажмите на сообщение с плагином и выберите **«Установить плагин»**.
