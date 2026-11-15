@@ -23,6 +23,7 @@ from android_utils import run_on_ui_thread, OnClickListener
 from client_utils import get_last_fragment
 from hook_utils import get_private_field
 from ui.settings import Header, Text, Divider
+from ui.alert import AlertDialogBuilder
 from ui.bulletin import BulletinHelper
 
 
@@ -486,21 +487,27 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 act = frag.getParentActivity()
                 if not act: return
 
-                from org.telegram.ui.ActionBar import AlertDialog
                 links = self._get_links()
                 url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
 
-                b = AlertDialog.Builder(act)
+                b = AlertDialogBuilder(act)
                 top_view = self._create_card_icon_view(act)
-                if top_view is not None:
-                    b.setTopView(top_view)
-                    b.notDrawBackgroundOnTopView(True)
+                raw_b = getattr(b, "builder", None) or getattr(b, "_builder", None)
+                if raw_b is not None and top_view is not None:
+                    try:
+                        raw_b.setTopView(top_view)
+                        raw_b.notDrawBackgroundOnTopView(True)
+                    except Exception:
+                        pass
 
-                b.setTitle(L.g("install_card_title"))
-                b.setMessage(L.g("install_card_msg"))
+                b.set_title(L.g("install_card_title"))
+                b.set_message(L.g("install_card_msg"))
 
                 def on_sub(d, w):
-                    d.dismiss()
+                    try:
+                        d.dismiss()
+                    except Exception:
+                        pass
                     self._open_url(url)
                     def check_after():
                         if self.is_subscribed_to_channel():
@@ -508,11 +515,14 @@ class DeleteFromGalleryPlugin(BasePlugin):
                     run_on_ui_thread(check_after, 3500)
 
                 def on_later(d, w):
-                    d.dismiss()
+                    try:
+                        d.dismiss()
+                    except Exception:
+                        pass
                     self.set_setting("last_remind_time", time.time())
 
-                b.setPositiveButton(L.g("subscribe_btn"), on_sub)
-                b.setNegativeButton(L.g("remind_later_btn"), on_later)
+                b.set_positive_button(L.g("subscribe_btn"), on_sub)
+                b.set_negative_button(L.g("remind_later_btn"), on_later)
                 b.show()
             except Exception as e:
                 self.log(f"[DeleteFromGallery] Welcome card error: {e}")
@@ -527,21 +537,27 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 act = frag.getParentActivity()
                 if not act: return
 
-                from org.telegram.ui.ActionBar import AlertDialog
                 links = self._get_links()
                 url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
 
-                b = AlertDialog.Builder(act)
+                b = AlertDialogBuilder(act)
                 top_view = self._create_card_icon_view(act)
-                if top_view is not None:
-                    b.setTopView(top_view)
-                    b.notDrawBackgroundOnTopView(True)
+                raw_b = getattr(b, "builder", None) or getattr(b, "_builder", None)
+                if raw_b is not None and top_view is not None:
+                    try:
+                        raw_b.setTopView(top_view)
+                        raw_b.notDrawBackgroundOnTopView(True)
+                    except Exception:
+                        pass
 
-                b.setTitle(L.g("trial_expired_title"))
-                b.setMessage(L.g("trial_expired_msg"))
+                b.set_title(L.g("trial_expired_title"))
+                b.set_message(L.g("trial_expired_msg"))
 
                 def on_sub(d, w):
-                    d.dismiss()
+                    try:
+                        d.dismiss()
+                    except Exception:
+                        pass
                     self._open_url(url)
                     def check_after():
                         if self.is_subscribed_to_channel():
@@ -549,15 +565,18 @@ class DeleteFromGalleryPlugin(BasePlugin):
                     run_on_ui_thread(check_after, 3500)
 
                 def on_check(d, w):
-                    d.dismiss()
+                    try:
+                        d.dismiss()
+                    except Exception:
+                        pass
                     if self.is_subscribed_to_channel():
                         self._notify_subscribed(was_expired=True)
                     else:
                         BulletinHelper.show_error(L.g("sub_not_found"))
                         self._show_expired_card()
 
-                b.setPositiveButton(L.g("subscribe_btn"), on_sub)
-                b.setNegativeButton(L.g("check_sub_btn"), on_check)
+                b.set_positive_button(L.g("subscribe_btn"), on_sub)
+                b.set_negative_button(L.g("check_sub_btn"), on_check)
                 b.show()
             except Exception as e:
                 self.log(f"[DeleteFromGallery] Expired card error: {e}")
