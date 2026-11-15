@@ -6,7 +6,7 @@ __description__ = (
     "Добавляет кнопки «Удалить с устройства» и «Отправить и удалить» в меню выбора медиа."
 )
 __author__ = "@itNotMax - @MaxExteraPlugins"
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 __icon__ = "MaxExteraPluginsStickers/23"
 __min_version__ = "12.10.6"
 __app_version__ = ">=12.10.6"
@@ -297,19 +297,16 @@ class DeleteFromGalleryPlugin(BasePlugin):
             Header(text="MaxExteraPlugins"),
             Text(
                 text=L.g("settings_channel"),
-                subtext=f"@{username}",
                 icon="msg_channel",
                 on_click=open_channel,
             ),
             Text(
                 text=L.g("settings_donate"),
-                subtext=L.g("settings_donate_sub"),
                 icon="msg_share",
                 on_click=open_donate,
             ),
             Text(
                 text=L.g("settings_bug_report"),
-                subtext=L.g("settings_bug_report_sub"),
                 icon="msg_help",
                 on_click=open_bug,
             ),
