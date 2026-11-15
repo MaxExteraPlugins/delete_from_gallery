@@ -10,3 +10,7 @@ bin/android.jar
 
 # Script requiring full PluginSystem root
 change_versions.bat
+
+# Python cache
+__pycache__/
+*.pyc
