@@ -36,6 +36,7 @@ DEFAULT_LINKS = {
     "channel_username": "MaxExteraPlugins",
     "channel_url": "https://t.me/MaxExteraPlugins",
     "donate_url": "https://t.me/itNotMax",
+    "bug_report_url": "https://t.me/itNotMax",
     "trial_days": 7
 }
 
@@ -90,6 +91,14 @@ class L:
             "ru": "Донат на развитие и поддержку плагинов",
             "en": "Donate to support development",
         },
+        "settings_bug_report": {
+            "ru": "Сообщить о баге",
+            "en": "Report a bug",
+        },
+        "settings_bug_report_sub": {
+            "ru": "Написать о проблеме или предложении",
+            "en": "Report an issue or suggestion",
+        },
         "install_card_title": {
             "ru": "Спасибо за установку!",
             "en": "Thank you for installing!",
@@ -139,8 +148,8 @@ class L:
             "en": "Thank you for subscribing to our channel!",
         },
         "sub_thank_you_after_expired": {
-            "ru": "Спасибо за подписку на наш канал!\nПлагин продолжит работать без ограничений",
-            "en": "Thank you for subscribing to our channel!\nThe plugin will continue working without restrictions",
+            "ru": "Спасибо за подписку на наш канал!\nПлагин продолжит работу!",
+            "en": "Thank you for subscribing to our channel!\nThe plugin will continue working!",
         },
         "sub_not_found": {
             "ru": "Подписка не обнаружена. Пожалуйста, подпишитесь на канал.",
@@ -253,6 +262,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
         links = self._get_links()
         channel_url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
         donate_url = links.get("donate_url", "https://t.me/itNotMax")
+        bug_url = links.get("bug_report_url", "https://t.me/itNotMax")
         username = links.get("channel_username", "MaxExteraPlugins")
 
         def open_channel(v=None):
@@ -260,6 +270,9 @@ class DeleteFromGalleryPlugin(BasePlugin):
 
         def open_donate(v=None):
             self._open_url(donate_url, v)
+
+        def open_bug(v=None):
+            self._open_url(bug_url, v)
 
         items = [
             Header(text="MaxExteraPlugins"),
@@ -274,6 +287,12 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 subtext=L.g("settings_donate_sub"),
                 icon="msg_share",
                 on_click=open_donate,
+            ),
+            Text(
+                text=L.g("settings_bug_report"),
+                subtext=L.g("settings_bug_report_sub"),
+                icon="msg_help",
+                on_click=open_bug,
             ),
             Divider(),
         ]
