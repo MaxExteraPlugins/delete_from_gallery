@@ -6,7 +6,7 @@ __description__ = (
     "Добавляет кнопки «Удалить с устройства» и «Отправить и удалить» в меню выбора медиа."
 )
 __author__ = "@itNotMax - @MaxExteraPlugins"
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 __icon__ = "MaxExteraPluginsStickers/23"
 __min_version__ = "12.10.6"
 __app_version__ = ">=12.10.6"
@@ -37,7 +37,28 @@ DEFAULT_LINKS = {
     "channel_url": "https://t.me/MaxExteraPlugins",
     "donate_url": "https://t.me/itNotMax",
     "bug_report_url": "https://t.me/itNotMax",
-    "trial_days": 7
+    "trial_days": 7,
+    "header": {
+        "ru": "MaxExteraPlugins",
+        "en": "MaxExteraPlugins"
+    },
+    "buttons": [
+        {
+            "title": {"ru": "Канал автора", "en": "Author's Channel"},
+            "icon": "msg_channel",
+            "url": "https://t.me/MaxExteraPlugins"
+        },
+        {
+            "title": {"ru": "Поддержать автора", "en": "Support author"},
+            "icon": "msg_share",
+            "url": "https://t.me/itNotMax"
+        },
+        {
+            "title": {"ru": "Сообщить о баге", "en": "Report a bug"},
+            "icon": "msg_help",
+            "url": "https://t.me/itNotMax"
+        }
+    ]
 }
 
 
@@ -279,51 +300,82 @@ class DeleteFromGalleryPlugin(BasePlugin):
     # ============================================================
     def create_settings(self) -> List[Any]:
         links = self._get_links()
-        channel_url = str(links.get("channel_url") or "").strip()
-        donate_url = str(links.get("donate_url") or "").strip()
-        bug_url = str(links.get("bug_report_url") or "").strip()
+        buttons_config = links.get("buttons")
 
         author_items = []
 
-        if channel_url:
-            def open_channel(v=None, url=channel_url):
-                self._open_url(url, v)
+        if isinstance(buttons_config, list):
+            for btn in buttons_config:
+                if not isinstance(btn, dict):
+                    continue
+                url = str(btn.get("url") or "").strip()
+                if not url:
+                    continue
 
-            author_items.append(
-                Text(
-                    text=L.g("settings_channel"),
-                    icon="msg_channel",
-                    on_click=open_channel,
+                title_data = btn.get("title")
+                if isinstance(title_data, dict):
+                    title = title_data.get("ru" if L.is_ru() else "en") or title_data.get("en") or title_data.get("ru") or ""
+                elif isinstance(title_data, str) and title_data:
+                    title = title_data
+                else:
+                    title = btn.get("title_ru" if L.is_ru() else "title_en") or btn.get("title_ru") or btn.get("title_en") or ""
+
+                if not title:
+                    continue
+
+                icon = str(btn.get("icon") or "msg_channel").strip()
+
+                def make_click(target_url):
+                    return lambda v=None: self._open_url(target_url, v)
+
+                author_items.append(
+                    Text(
+                        text=title,
+                        icon=icon,
+                        on_click=make_click(url),
+                    )
                 )
-            )
+        else:
+            channel_url = str(links.get("channel_url") or "").strip()
+            donate_url = str(links.get("donate_url") or "").strip()
+            bug_url = str(links.get("bug_report_url") or "").strip()
 
-        if donate_url:
-            def open_donate(v=None, url=donate_url):
-                self._open_url(url, v)
-
-            author_items.append(
-                Text(
-                    text=L.g("settings_donate"),
-                    icon="msg_share",
-                    on_click=open_donate,
+            if channel_url:
+                author_items.append(
+                    Text(
+                        text=L.g("settings_channel"),
+                        icon="msg_channel",
+                        on_click=lambda v=None, u=channel_url: self._open_url(u, v),
+                    )
                 )
-            )
 
-        if bug_url:
-            def open_bug(v=None, url=bug_url):
-                self._open_url(url, v)
-
-            author_items.append(
-                Text(
-                    text=L.g("settings_bug_report"),
-                    icon="msg_help",
-                    on_click=open_bug,
+            if donate_url:
+                author_items.append(
+                    Text(
+                        text=L.g("settings_donate"),
+                        icon="msg_share",
+                        on_click=lambda v=None, u=donate_url: self._open_url(u, v),
+                    )
                 )
-            )
+
+            if bug_url:
+                author_items.append(
+                    Text(
+                        text=L.g("settings_bug_report"),
+                        icon="msg_help",
+                        on_click=lambda v=None, u=bug_url: self._open_url(u, v),
+                    )
+                )
 
         items = []
         if author_items:
-            items.append(Header(text="MaxExteraPlugins"))
+            hdr = links.get("header") or "MaxExteraPlugins"
+            if isinstance(hdr, dict):
+                hdr_text = hdr.get("ru" if L.is_ru() else "en") or hdr.get("ru") or hdr.get("en") or "MaxExteraPlugins"
+            else:
+                hdr_text = str(hdr)
+
+            items.append(Header(text=hdr_text))
             items.extend(author_items)
             items.append(Divider())
 
