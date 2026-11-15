@@ -280,68 +280,73 @@ class DeleteFromGalleryPlugin(BasePlugin):
         return items
 
     # ============================================================
-    # Top Card Icon View (Plugin Sticker / Icon)
+    # Card Content with Centered Plugin Sticker View
     # ============================================================
-    def _create_card_icon_view(self, act):
+    def _create_card_content(self, act, title_text, message_text):
         try:
-            from android.widget import FrameLayout, ImageView, TextView
+            from android.widget import LinearLayout, TextView
             from android.view import Gravity
-            from android.graphics.drawable import GradientDrawable
-            from org.telegram.messenger import AndroidUtilities, UserConfig, MediaDataController, ImageLocation, R
+            from android.graphics import Typeface
+            from org.telegram.messenger import AndroidUtilities, UserConfig, MediaDataController
             from org.telegram.ui.ActionBar import Theme
             from org.telegram.ui.Components import BackupImageView
 
             dp = AndroidUtilities.dp
-            container = FrameLayout(act)
-            container.setPadding(0, dp(20), 0, dp(4))
 
-            size = dp(68)
-            box = FrameLayout(act)
+            layout = LinearLayout(act)
+            layout.setOrientation(LinearLayout.VERTICAL)
+            layout.setGravity(Gravity.CENTER_HORIZONTAL)
+            layout.setPadding(dp(24), dp(16), dp(24), dp(6))
 
-            bg = GradientDrawable()
-            accent = Theme.getColor(Theme.key_featuredStickers_addButton)
-            bg.setColor(accent)
-            bg.setCornerRadius(float(dp(20)))
-            box.setBackground(bg)
+            # 1. Sticker icon (BackupImageView)
+            size = dp(76)
+            iv = BackupImageView(act)
+            iv.setRoundRadius(dp(18))
+            lp_iv = LinearLayout.LayoutParams(size, size)
+            lp_iv.gravity = Gravity.CENTER_HORIZONTAL
+            lp_iv.setMargins(0, dp(4), 0, dp(16))
+            iv.setLayoutParams(lp_iv)
 
-            loaded = False
             try:
                 acc = int(UserConfig.selectedAccount)
                 mdc = MediaDataController.getInstance(acc)
-                pack = "MaxExteraPluginsStickers"
-                sticker_set = mdc.getStickerSetByName(pack)
-                if sticker_set is not None and sticker_set.documents is not None and sticker_set.documents.size() > 23:
-                    doc = sticker_set.documents.get(23)
-                    iv = BackupImageView(act)
-                    iv.setRoundRadius(dp(20))
-                    iv.setImage(ImageLocation.getForDocument(doc), "68_68", None, None, sticker_set)
-                    box.addView(iv, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
-                    loaded = True
-                else:
-                    mdc.loadStickersByEmojiOrName(pack, False, True)
-            except Exception:
-                pass
+                raw_icon = str(__icon__)
+                if "/" in raw_icon:
+                    pack, idx_s = raw_icon.split("/", 1)
+                    mdc.setPlaceholderImageByIndex(iv, pack, int(idx_s), "150_150")
+            except Exception as e:
+                self.log(f"[DeleteFromGallery] Sticker load note: {e}")
 
-            if not loaded:
-                try:
-                    iv = ImageView(act)
-                    iv.setImageResource(R.drawable.msg_delete)
-                    iv.setColorFilter(Theme.getColor(Theme.key_windowBackgroundWhite))
-                    pad = dp(16)
-                    iv.setPadding(pad, pad, pad, pad)
-                    box.addView(iv, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
-                except Exception:
-                    tv = TextView(act)
-                    tv.setText("🗑️")
-                    tv.setTextSize(26.0)
-                    tv.setGravity(Gravity.CENTER)
-                    box.addView(tv, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
+            layout.addView(iv)
 
-            lp = FrameLayout.LayoutParams(size, size, Gravity.CENTER_HORIZONTAL)
-            container.addView(box, lp)
-            return container
+            # 2. Title
+            if title_text:
+                title_tv = TextView(act)
+                title_tv.setText(title_text)
+                title_tv.setTextSize(19.0)
+                title_tv.setTypeface(None, Typeface.BOLD)
+                title_tv.setTextColor(Theme.getColor(Theme.key_dialogTextBlack))
+                title_tv.setGravity(Gravity.CENTER_HORIZONTAL)
+                lp_t = LinearLayout.LayoutParams(-1, -2)
+                lp_t.setMargins(0, 0, 0, dp(12))
+                title_tv.setLayoutParams(lp_t)
+                layout.addView(title_tv)
+
+            # 3. Message
+            if message_text:
+                msg_tv = TextView(act)
+                msg_tv.setText(message_text)
+                msg_tv.setTextSize(15.0)
+                msg_tv.setTextColor(Theme.getColor(Theme.key_dialogTextBlack))
+                msg_tv.setLineSpacing(float(dp(3)), 1.0)
+                msg_tv.setGravity(Gravity.CENTER_HORIZONTAL)
+                lp_m = LinearLayout.LayoutParams(-1, -2)
+                msg_tv.setLayoutParams(lp_m)
+                layout.addView(msg_tv)
+
+            return layout
         except Exception as e:
-            self.log(f"[DeleteFromGallery] Create card icon error: {e}")
+            self.log(f"[DeleteFromGallery] Card content error: {e}")
             return None
 
     # ============================================================
@@ -491,17 +496,12 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
 
                 b = AlertDialogBuilder(act)
-                top_view = self._create_card_icon_view(act)
-                raw_b = getattr(b, "builder", None) or getattr(b, "_builder", None)
-                if raw_b is not None and top_view is not None:
-                    try:
-                        raw_b.setTopView(top_view)
-                        raw_b.notDrawBackgroundOnTopView(True)
-                    except Exception:
-                        pass
-
-                b.set_title(L.g("install_card_title"))
-                b.set_message(L.g("install_card_msg"))
+                content = self._create_card_content(act, L.g("install_card_title"), L.g("install_card_msg"))
+                if content is not None:
+                    b.set_view(content)
+                else:
+                    b.set_title(L.g("install_card_title"))
+                    b.set_message(L.g("install_card_msg"))
 
                 def on_sub(d, w):
                     try:
@@ -541,17 +541,12 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
 
                 b = AlertDialogBuilder(act)
-                top_view = self._create_card_icon_view(act)
-                raw_b = getattr(b, "builder", None) or getattr(b, "_builder", None)
-                if raw_b is not None and top_view is not None:
-                    try:
-                        raw_b.setTopView(top_view)
-                        raw_b.notDrawBackgroundOnTopView(True)
-                    except Exception:
-                        pass
-
-                b.set_title(L.g("trial_expired_title"))
-                b.set_message(L.g("trial_expired_msg"))
+                content = self._create_card_content(act, L.g("trial_expired_title"), L.g("trial_expired_msg"))
+                if content is not None:
+                    b.set_view(content)
+                else:
+                    b.set_title(L.g("trial_expired_title"))
+                    b.set_message(L.g("trial_expired_msg"))
 
                 def on_sub(d, w):
                     try:
