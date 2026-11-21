@@ -28,7 +28,7 @@ Quickly delete sent photos and videos from your local device gallery.
 ## 📥 Installation
 
 1. Navigate to the [**Releases**](https://github.com/MaxExteraPlugins/delete_from_gallery/releases/latest) section.
-2. Download the `delete_from_gallery_v1.1.6.plugin` file.
+2. Download the `delete_from_gallery_v1.2.0.plugin` file.
 3. Send the file to your Telegram Saved Messages or open it via file manager in exteraGram / AyuGram.
 4. Tap the file in Telegram and choose **"Install plugin"**.
 

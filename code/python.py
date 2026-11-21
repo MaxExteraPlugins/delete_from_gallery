@@ -6,7 +6,7 @@ __description__ = (
     "Добавляет кнопки «Удалить с устройства» и «Отправить и удалить» в меню выбора медиа."
 )
 __author__ = "@itNotMax - @MaxExteraPlugins"
-__version__ = "1.1.6"
+__version__ = "1.2.0"
 __icon__ = "MaxExteraPluginsStickers/23"
 __min_version__ = "12.10.6"
 __app_version__ = ">=12.10.6"
@@ -297,9 +297,6 @@ class AuthorChannelHelper:
         self._stopped = False
         self._active_dialog = None
         self._last_known_sub = None
-        self._load_remote_links_async()
-        self._check_initial_subscription_flow()
-        self._start_subscription_watcher()
 
     def on_event(self, event_type):
         try:
@@ -591,9 +588,9 @@ class AuthorChannelHelper:
 
     def _notify_subscribed(self, was_expired=False):
         self.plugin.set_setting("was_subscribed", True)
-        from ui.bulletin import BulletinHelper
         msg_key = "sub_thank_you_after_expired" if was_expired else "sub_thank_you"
-        BulletinHelper.show_success(self.tr(msg_key))
+        if hasattr(self.plugin, "_safe_notify"):
+            self.plugin._safe_notify(self.tr(msg_key), is_error=False)
 
     def _check_subscription_change_instant(self):
         try:
@@ -847,7 +844,7 @@ class AuthorChannelHelper:
                         self.plugin.set_setting("was_expired_state", False)
                         self._notify_subscribed(was_expired=True)
                     else:
-                        BulletinHelper.show_error(self.tr("sub_not_found"))
+                        if hasattr(self.plugin, "_safe_notify"): self.plugin._safe_notify(self.tr("sub_not_found"), is_error=True)
                         from android_utils import run_on_ui_thread
                         run_on_ui_thread(self._show_expired_card, 500)
 
@@ -867,13 +864,14 @@ class DeleteFromGalleryPlugin(BasePlugin):
         self._author_helper.on_load()
         try:
             self._stopped = False
+            self._last_action_time = 0.0
             self._active_dialog = None
             self._last_known_sub = None
             self._load_remote_links_async()
             self._check_initial_subscription_flow()
             self._start_subscription_watcher()
             self._setup_hook()
-        except Exception as e:
+        except BaseException as e:
             self.log(f"[DeleteFromGallery] Hook setup error: {e}")
 
     def on_app_event(self, event_type):
@@ -883,7 +881,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
             name = str(event_type).upper()
             if name.endswith("START") or name.endswith("RESUME"):
                 self._check_subscription_change_instant()
-        except Exception as e:
+        except BaseException as e:
             self.log(f"[DeleteFromGallery] on_app_event error: {e}")
 
     def on_plugin_unload(self):
@@ -892,7 +890,34 @@ class DeleteFromGalleryPlugin(BasePlugin):
         try:
             self._stopped = True
             self._dismiss_active_dialog()
-        except Exception:
+        except BaseException:
+            pass
+
+    def _safe_notify(self, text, is_error=False):
+        def show():
+            try:
+                from org.telegram.ui.Components import BulletinFactory
+                bf = getattr(BulletinFactory, "global")()
+                if bf is not None:
+                    if is_error:
+                        b = bf.createErrorBulletin(str(text))
+                    else:
+                        b = bf.createSuccessBulletin(str(text))
+                    if b is not None:
+                        b.show()
+                        return
+            except BaseException:
+                pass
+            try:
+                from org.telegram.messenger import ApplicationLoader
+                from android.widget import Toast
+                Toast.makeText(ApplicationLoader.applicationContext, str(text), Toast.LENGTH_SHORT).show()
+            except BaseException:
+                pass
+
+        try:
+            run_on_ui_thread(show)
+        except BaseException:
             pass
 
     # ============================================================
@@ -905,7 +930,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 data = json.loads(raw)
                 if isinstance(data, dict):
                     return data
-            except Exception:
+            except BaseException:
                 pass
         return DEFAULT_LINKS
 
@@ -923,7 +948,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                         if isinstance(data, dict):
                             self.set_setting("remote_links_cache", json.dumps(data))
                             self._resolve_channel_in_telegram(data.get("channel_username", "MaxExteraPlugins"))
-            except Exception as e:
+            except BaseException as e:
                 self.log(f"[DeleteFromGallery] Remote config load note: {e}")
 
         t = threading.Thread(target=worker, daemon=True)
@@ -943,7 +968,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
             if ctx is None:
                 ctx = ApplicationLoader.applicationContext
             Browser.openUrl(ctx, url)
-        except Exception as e:
+        except BaseException as e:
             self.log(f"[DeleteFromGallery] Open URL error: {e}")
 
     # ============================================================
@@ -952,7 +977,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
     def create_settings(self):
         try:
             items = self._inner_create_settings()
-        except Exception:
+        except BaseException:
             items = []
         if hasattr(self, '_author_helper'):
             return self._author_helper.prepend_settings(items)
@@ -1076,7 +1101,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 if "/" in raw_icon:
                     pack, idx_s = raw_icon.split("/", 1)
                     mdc.setPlaceholderImageByIndex(iv, pack, int(idx_s), "150_150")
-            except Exception as e:
+            except BaseException as e:
                 self.log(f"[DeleteFromGallery] Sticker load note: {e}")
 
             layout.addView(iv)
@@ -1107,7 +1132,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 layout.addView(msg_tv)
 
             return layout
-        except Exception as e:
+        except BaseException as e:
             self.log(f"[DeleteFromGallery] Card content error: {e}")
             return None
 
@@ -1142,7 +1167,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                                 plugin_ref.set_setting("resolved_channel_id", int(cid))
 
             ConnectionsManager.getInstance(acc).sendRequest(req, Delegate())
-        except Exception:
+        except BaseException:
             pass
 
     def is_subscribed_to_channel(self) -> bool:
@@ -1171,7 +1196,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                             kicked = bool(getattr(c, "kicked", False))
                             if not left and not kicked:
                                 return True
-                    except Exception:
+                    except BaseException:
                         pass
 
                 # 2. Check by username lookup in MessagesController
@@ -1185,7 +1210,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                         kicked = bool(getattr(chat, "kicked", False))
                         if not left and not kicked:
                             return True
-                except Exception:
+                except BaseException:
                     pass
 
                 # 3. Check dialogs list
@@ -1209,22 +1234,22 @@ class DeleteFromGalleryPlugin(BasePlugin):
                                         kicked = bool(getattr(c, "kicked", False))
                                         if not left and not kicked:
                                             return True
-                except Exception:
+                except BaseException:
                     pass
-        except Exception as e:
+        except BaseException as e:
             self.log(f"[DeleteFromGallery] is_subscribed error: {e}")
         return False
 
     def _notify_subscribed(self, was_expired=False):
         self.set_setting("was_subscribed", True)
         msg_key = "sub_thank_you_after_expired" if was_expired else "sub_thank_you"
-        BulletinHelper.show_success(L.g(msg_key))
+        self._safe_notify(L.g(msg_key), is_error=False)
 
     def _dismiss_active_dialog(self):
         try:
             if self._active_dialog is not None:
                 self._active_dialog.dismiss()
-        except Exception:
+        except BaseException:
             pass
         self._active_dialog = None
 
@@ -1232,7 +1257,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
         try:
             if self._active_dialog is not None:
                 return bool(self._active_dialog.isShowing())
-        except Exception:
+        except BaseException:
             pass
         return False
 
@@ -1255,12 +1280,11 @@ class DeleteFromGalleryPlugin(BasePlugin):
                     self._show_expired_card()
             else:
                 self._last_known_sub = cur_sub
-        except Exception as e:
+        except BaseException as e:
             self.log(f"[DeleteFromGallery] instant check note: {e}")
 
     def _start_subscription_watcher(self):
         def watcher_loop():
-            # Initial settling delay
             time.sleep(2.0)
             if self._stopped:
                 return
@@ -1281,7 +1305,6 @@ class DeleteFromGalleryPlugin(BasePlugin):
                         self._last_known_sub = cur_sub
 
                         if cur_sub:
-                            # Subscribed!
                             was_exp = bool(self.get_setting("was_expired_state", False))
                             self.set_setting("was_subscribed", True)
                             self.set_setting("was_expired_state", False)
@@ -1291,9 +1314,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                                 self._notify_subscribed(was_expired=was_exp)
 
                             run_on_ui_thread(on_sub_ui)
-
                         else:
-                            # Unsubscribed / Left channel!
                             self.set_setting("was_subscribed", False)
                             self.set_setting("was_expired_state", True)
 
@@ -1302,11 +1323,10 @@ class DeleteFromGalleryPlugin(BasePlugin):
                                 self._show_expired_card()
 
                             run_on_ui_thread(on_unsub_ui)
-
                     else:
                         self._last_known_sub = cur_sub
 
-                except Exception as e:
+                except BaseException as e:
                     self.log(f"[DeleteFromGallery] Watcher loop error: {e}")
 
         t = threading.Thread(target=watcher_loop, daemon=True)
@@ -1333,15 +1353,12 @@ class DeleteFromGalleryPlugin(BasePlugin):
                         self._notify_subscribed(was_expired=was_expired)
                     return
 
-                # User is NOT subscribed
                 if was_sub or was_expired:
-                    # User had plugin / was subscribed before and left or trial expired!
                     self.set_setting("was_subscribed", False)
                     self.set_setting("was_expired_state", True)
                     self._show_expired_card()
                     return
 
-                # Brand new user within 7 days trial
                 trial_days = float(self._get_links().get("trial_days", 7))
                 trial_sec = trial_days * 86400.0
                 last_remind = float(self.get_setting("last_remind_time", 0.0) or 0.0)
@@ -1353,7 +1370,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                     self.set_setting("was_expired_state", True)
                     self._show_expired_card()
 
-            except Exception as e:
+            except BaseException as e:
                 self.log(f"[DeleteFromGallery] Initial flow error: {e}")
 
         run_on_ui_thread(flow, 1500)
@@ -1367,7 +1384,6 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 self._notify_subscribed(was_expired=was_expired)
             return True
 
-        # User is NOT subscribed
         if self.get_setting("was_expired_state", False) or self.get_setting("was_subscribed", False):
             self.set_setting("was_subscribed", False)
             self.set_setting("was_expired_state", True)
@@ -1386,7 +1402,6 @@ class DeleteFromGalleryPlugin(BasePlugin):
         if (now - install_time) < trial_sec:
             return True
 
-        # Trial expired
         self.set_setting("was_expired_state", True)
         self._show_expired_card()
         return False
@@ -1427,7 +1442,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 b.set_positive_button(L.g("subscribe_btn"), on_sub)
                 b.set_negative_button(L.g("remind_later_btn"), on_later)
                 self._active_dialog = b.show()
-            except Exception as e:
+            except BaseException as e:
                 self.log(f"[DeleteFromGallery] Welcome card error: {e}")
 
         run_on_ui_thread(show)
@@ -1470,13 +1485,13 @@ class DeleteFromGalleryPlugin(BasePlugin):
                         self.set_setting("was_expired_state", False)
                         self._notify_subscribed(was_expired=True)
                     else:
-                        BulletinHelper.show_error(L.g("sub_not_found"))
+                        self._safe_notify(L.g("sub_not_found"), is_error=True)
                         run_on_ui_thread(self._show_expired_card, 500)
 
                 b.set_positive_button(L.g("subscribe_btn"), on_sub)
                 b.set_negative_button(L.g("check_sub_btn"), on_check)
                 self._active_dialog = b.show()
-            except Exception as e:
+            except BaseException as e:
                 self.log(f"[DeleteFromGallery] Expired card error: {e}")
 
         run_on_ui_thread(show)
@@ -1487,17 +1502,16 @@ class DeleteFromGalleryPlugin(BasePlugin):
     def _setup_hook(self):
         from java.lang import Class, Integer as JInt
 
+        plugin_ref = self
         clazz = Class.forName("org.telegram.ui.Components.ChatAttachAlertPhotoLayout")
 
         try:
-            method = clazz.getDeclaredMethod("onSelectedItemsCountChanged", JInt.TYPE)
-        except Exception:
-            method = clazz.getMethod("onSelectedItemsCountChanged", JInt.TYPE)
+            count_method = clazz.getDeclaredMethod("onSelectedItemsCountChanged", JInt.TYPE)
+        except BaseException:
+            count_method = clazz.getMethod("onSelectedItemsCountChanged", JInt.TYPE)
+        count_method.setAccessible(True)
 
-        method.setAccessible(True)
-        plugin_ref = self
-
-        class MenuHook(MethodHook):
+        class CountHook(MethodHook):
             def after_hooked_method(self, param):
                 try:
                     layout = param.thisObject
@@ -1513,87 +1527,112 @@ class DeleteFromGalleryPlugin(BasePlugin):
                     if menu is None:
                         return
 
-                    existing_ids = set()
-                    try:
-                        popup = menu.getPopupLayout()
-                        if popup is not None:
-                            ll = getattr(popup, "linearLayout", None)
-                            if ll is not None:
-                                for i in range(ll.getChildCount()):
-                                    child = ll.getChildAt(i)
-                                    existing_ids.add(child.getId())
-                    except Exception:
-                        pass
+                    plugin_ref._add_menu_items_if_needed(menu, layout, pa)
+                except BaseException as e:
+                    plugin_ref.log(f"[DeleteFromGallery] CountHook error: {e}")
 
-                    if DELETE_ITEM_ID not in existing_ids:
-                        menu.addSubItem(
-                            DELETE_ITEM_ID,
-                            plugin_ref._get_icon_res(pa),
-                            L.g("delete_from_device")
-                        )
-
-                    if SEND_AND_DELETE_ITEM_ID not in existing_ids:
-                        menu.addSubItem(
-                            SEND_AND_DELETE_ITEM_ID,
-                            plugin_ref._get_icon_res(pa),
-                            L.g("send_and_delete")
-                        )
-
-                    plugin_ref._ensure_click_listener(menu, layout, pa)
-
-                except Exception as e:
-                    plugin_ref.log(f"[DeleteFromGallery] Hook error: {e}")
-
-        self.hook_method(method, MenuHook())
-
-    def _ensure_click_listener(self, menu, layout, parent_alert):
-        plugin_ref = self
-
-        class ListenerWrapper(OnClickListener):
-            def onClick(self, view):
-                try:
-                    item_id = view.getId()
-                    if item_id == DELETE_ITEM_ID:
-                        if not plugin_ref.is_feature_allowed():
-                            return
-                        plugin_ref._perform_delete(layout, parent_alert, send_first=False)
-                        return
-                    elif item_id == SEND_AND_DELETE_ITEM_ID:
-                        if not plugin_ref.is_feature_allowed():
-                            return
-                        plugin_ref._perform_delete(layout, parent_alert, send_first=True)
-                        return
-                except Exception as e:
-                    plugin_ref.log(f"[DeleteFromGallery] Item click error: {e}")
-
-                orig = getattr(menu, "_orig_delegate_listener", None)
-                if orig is not None:
-                    orig.onClick(view)
+        self.hook_method(count_method, CountHook())
 
         try:
+            click_method = clazz.getDeclaredMethod("onMenuItemClick", JInt.TYPE)
+            click_method.setAccessible(True)
+
+            class ClickHook(MethodHook):
+                def before_hooked_method(self, param):
+                    try:
+                        item_id = int(param.args[0])
+                        layout = param.thisObject
+                        pa = getattr(layout, "parentAlert", None)
+                        if item_id == DELETE_ITEM_ID:
+                            param.setResult(None)
+                            plugin_ref._on_action(layout, pa, send_first=False)
+                        elif item_id == SEND_AND_DELETE_ITEM_ID:
+                            param.setResult(None)
+                            plugin_ref._on_action(layout, pa, send_first=True)
+                    except BaseException as e:
+                        plugin_ref.log(f"[DeleteFromGallery] ClickHook error: {e}")
+
+            self.hook_method(click_method, ClickHook())
+        except BaseException as e:
+            plugin_ref.log(f"[DeleteFromGallery] onMenuItemClick hook error: {e}")
+
+    def _has_sub_item(self, menu, item_id: int) -> bool:
+        try:
+            if menu.hasSubItem(item_id):
+                return True
+        except BaseException:
+            pass
+        try:
             popup = menu.getPopupLayout()
-            if popup is None:
-                return
+            if popup is not None:
+                ll = getattr(popup, "linearLayout", None)
+                if ll is not None:
+                    count = ll.getChildCount()
+                    for i in range(count):
+                        child = ll.getChildAt(i)
+                        if child is None:
+                            continue
+                        if child.getId() == item_id:
+                            return True
+                        tag = child.getTag()
+                        if tag is not None and str(tag) == str(item_id):
+                            return True
+        except BaseException:
+            pass
+        return False
 
-            ll = getattr(popup, "linearLayout", None)
-            if ll is None:
-                return
+    def _add_menu_items_if_needed(self, menu, layout, parent_alert):
+        try:
+            plugin_ref = self
+            icon_res = self._get_icon_res(parent_alert)
 
-            for i in range(ll.getChildCount()):
-                child = ll.getChildAt(i)
-                cid = child.getId()
-                if cid in (DELETE_ITEM_ID, SEND_AND_DELETE_ITEM_ID):
-                    if not getattr(child, "_wrapped_click", False):
-                        child.setOnClickListener(ListenerWrapper())
-                        child._wrapped_click = True
-        except Exception as e:
-            self.log(f"[DeleteFromGallery] Click listener error: {e}")
+            def on_click_action(send_first):
+                try:
+                    menu.closeSubMenu()
+                except BaseException:
+                    pass
+                plugin_ref._on_action(layout, parent_alert, send_first=send_first)
+
+            if not self._has_sub_item(menu, DELETE_ITEM_ID):
+                sub_del = menu.addSubItem(DELETE_ITEM_ID, icon_res, L.g("delete_from_device"))
+                if sub_del is not None:
+                    try:
+                        sub_del.setId(DELETE_ITEM_ID)
+                        sub_del.setTag(DELETE_ITEM_ID)
+                        sub_del.setOnClickListener(OnClickListener(lambda v: on_click_action(False)))
+                    except BaseException:
+                        pass
+
+            if not self._has_sub_item(menu, SEND_AND_DELETE_ITEM_ID):
+                sub_send = menu.addSubItem(SEND_AND_DELETE_ITEM_ID, icon_res, L.g("send_and_delete"))
+                if sub_send is not None:
+                    try:
+                        sub_send.setId(SEND_AND_DELETE_ITEM_ID)
+                        sub_send.setTag(SEND_AND_DELETE_ITEM_ID)
+                        sub_send.setOnClickListener(OnClickListener(lambda v: on_click_action(True)))
+                    except BaseException:
+                        pass
+        except BaseException as e:
+            self.log(f"[DeleteFromGallery] Add menu items error: {e}")
+
+    def _on_action(self, layout, parent_alert, send_first=False):
+        now = time.time()
+        if (now - getattr(self, "_last_action_time", 0.0)) < 0.8:
+            return
+        self._last_action_time = now
+
+        try:
+            if not self.is_feature_allowed():
+                return
+            self._perform_delete(layout, parent_alert, send_first=send_first)
+        except BaseException as e:
+            self.log(f"[DeleteFromGallery] Action error: {e}")
 
     def _get_icon_res(self, parent_alert):
         try:
             from org.telegram.messenger import R
             return R.drawable.msg_delete
-        except Exception:
+        except BaseException:
             return 0
 
     def _get_activity(self, parent_alert):
@@ -1603,7 +1642,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 act = base_frag.getParentActivity()
                 if act is not None:
                     return act
-        except Exception:
+        except BaseException:
             pass
 
         frag = get_last_fragment()
@@ -1625,7 +1664,7 @@ class DeleteFromGalleryPlugin(BasePlugin):
             for entry in valid:
                 try:
                     valid_ids.add(int(entry.imageId))
-                except Exception:
+                except BaseException:
                     pass
 
             for album_idx in range(albums.size()):
@@ -1639,97 +1678,92 @@ class DeleteFromGalleryPlugin(BasePlugin):
                     try:
                         if int(p.imageId) in valid_ids:
                             photos.remove(photo_idx)
-                    except Exception:
+                    except BaseException:
                         pass
-        except Exception as e:
+        except BaseException as e:
             self.log(f"[DeleteFromGallery] Album cleanup error: {e}")
 
     def _send_media(self, parent_alert):
         try:
             photo_layout = getattr(parent_alert, "photoLayout", None)
             if photo_layout is not None:
-                method = photo_layout.getClass().getDeclaredMethod("sendSelectedPhotos", [False.__class__] if hasattr(False, '__class__') else [])
+                try:
+                    photo_layout.sendSelectedPhotos(False)
+                    return
+                except BaseException:
+                    pass
             parent_alert.sendPressed(True, 0)
-        except Exception:
+        except BaseException:
             try:
                 parent_alert.sendPressed(True, 0)
-            except Exception as e:
+            except BaseException as e:
                 self.log(f"[DeleteFromGallery] Send media error: {e}")
 
-    def _clear_selection(self, layout, parent_alert, valid):
+    def _clear_selection(self, layout, parent_alert):
         def do_clear():
             try:
-                from org.telegram.ui.Components import ChatAttachAlertPhotoLayout
-                sel_photos = getattr(ChatAttachAlertPhotoLayout, "selectedPhotos", None)
-                sel_order = getattr(ChatAttachAlertPhotoLayout, "selectedPhotosOrder", None)
-
-                for entry in valid:
+                if layout is not None:
                     try:
-                        if sel_photos is not None:
-                            sel_photos.remove(entry.imageId)
-                        if sel_order is not None:
-                            sel_order.remove(entry.imageId)
-                    except Exception:
+                        layout.clearSelectedPhotos()
+                    except BaseException:
                         pass
-
-                try:
-                    adapter = get_private_field(layout, "adapter")
-                    if adapter is not None:
-                        adapter.notifyDataSetChanged()
-                except Exception:
-                    pass
-
-                try:
-                    parent_alert.updateCountButton(2)
-                except Exception:
-                    pass
-
-            except Exception as e:
+                if parent_alert is not None:
+                    try:
+                        parent_alert.updateCountButton(0)
+                    except BaseException:
+                        pass
+            except BaseException as e:
                 self.log(f"[DeleteFromGallery] Clear selection error: {e}")
 
-        run_on_ui_thread(do_clear)
+        try:
+            run_on_ui_thread(do_clear)
+        except BaseException:
+            pass
 
     def _execute_media_deletion(self, activity, resolver, uris, valid, sdk):
-        if sdk >= 30:
-            try:
-                from android.provider import MediaStore
-                pi = MediaStore.createDeleteRequest(resolver, uris)
-                if activity is not None:
-                    activity.startIntentSenderForResult(pi.getIntentSender(), 110, None, 0, 0, 0)
-                    BulletinHelper.show_info(L.g("confirm_delete"))
-                else:
-                    BulletinHelper.show_error(L.g("cannot_get_activity"))
-            except Exception as e:
-                self.log(f"[DeleteFromGallery] createDeleteRequest error: {e}")
-                BulletinHelper.show_error(L.g("failed_request_delete"))
-        else:
-            deleted = 0
-            for i in range(uris.size()):
+        try:
+            if sdk >= 30:
                 try:
-                    if resolver.delete(uris.get(i), None, None) > 0:
-                        deleted += 1
-                except Exception as e:
-                    self.log(f"[DeleteFromGallery] ContentResolver.delete error: {e}")
-
-            if deleted < len(valid):
-                for entry in valid:
-                    try:
-                        path = str(entry.path) if entry.path is not None else None
-                        if path is None:
-                            continue
-                        from java.io import File as JFile
-                        f = JFile(path)
-                        if f.exists() and f.delete():
-                            deleted += 1
-                    except Exception:
-                        pass
-
-            if deleted > 0:
-                BulletinHelper.show_success(L.g("deleted_count", deleted))
+                    from android.provider import MediaStore
+                    pi = MediaStore.createDeleteRequest(resolver, uris)
+                    if activity is not None:
+                        activity.startIntentSenderForResult(pi.getIntentSender(), 110, None, 0, 0, 0)
+                        self._safe_notify(L.g("confirm_delete"), is_error=False)
+                    else:
+                        self._safe_notify(L.g("cannot_get_activity"), is_error=True)
+                except BaseException as e:
+                    self.log(f"[DeleteFromGallery] createDeleteRequest error: {e}")
+                    self._safe_notify(L.g("failed_request_delete"), is_error=True)
             else:
-                BulletinHelper.show_error(L.g("cannot_delete_files"))
+                deleted = 0
+                for i in range(uris.size()):
+                    try:
+                        if resolver.delete(uris.get(i), None, None) > 0:
+                            deleted += 1
+                    except BaseException as e:
+                        self.log(f"[DeleteFromGallery] ContentResolver.delete error: {e}")
 
-        self._clean_media_controller_albums(valid)
+                if deleted < len(valid):
+                    for entry in valid:
+                        try:
+                            path = str(entry.path) if entry.path is not None else None
+                            if path is None:
+                                continue
+                            from java.io import File as JFile
+                            f = JFile(path)
+                            if f.exists() and f.delete():
+                                deleted += 1
+                        except BaseException:
+                            pass
+
+                if deleted > 0:
+                    self._safe_notify(L.g("deleted_count", deleted), is_error=False)
+                else:
+                    self._safe_notify(L.g("cannot_delete_files"), is_error=True)
+
+            self._clean_media_controller_albums(valid)
+        except BaseException as e:
+            self.log(f"[DeleteFromGallery] Media deletion error: {e}")
 
     def _perform_delete(self, layout, parent_alert, send_first=False):
         from org.telegram.ui.Components import ChatAttachAlertPhotoLayout
@@ -1743,18 +1777,21 @@ class DeleteFromGalleryPlugin(BasePlugin):
         if menu is not None:
             try:
                 menu.closeSubMenu()
-            except Exception:
+            except BaseException:
                 pass
 
         sel_photos = getattr(ChatAttachAlertPhotoLayout, "selectedPhotos", None)
         if sel_photos is None or sel_photos.isEmpty():
-            BulletinHelper.show_error(L.g("no_media_selected"))
+            self._safe_notify(L.g("no_media_selected"), is_error=True)
             return
 
         entries = []
-        it = sel_photos.values().iterator()
-        while it.hasNext():
-            entries.append(it.next())
+        try:
+            it = sel_photos.values().iterator()
+            while it.hasNext():
+                entries.append(it.next())
+        except BaseException as e:
+            self.log(f"[DeleteFromGallery] Read selectedPhotos error: {e}")
 
         ctx = ApplicationLoader.applicationContext
         resolver = ctx.getContentResolver()
@@ -1768,14 +1805,15 @@ class DeleteFromGalleryPlugin(BasePlugin):
                 img_id = int(entry.imageId)
                 if img_id <= 0:
                     continue
-                base = MediaStore.Video.Media.EXTERNAL_CONTENT_URI if entry.isVideo else MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                is_video = bool(getattr(entry, "isVideo", False))
+                base = MediaStore.Video.Media.EXTERNAL_CONTENT_URI if is_video else MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                 uris.add(ContentUris.withAppendedId(base, img_id))
                 valid.append(entry)
-            except Exception as e:
+            except BaseException as e:
                 self.log(f"[DeleteFromGallery] URI build error: {e}")
 
         if uris.isEmpty():
-            BulletinHelper.show_error(L.g("no_valid_media"))
+            self._safe_notify(L.g("no_valid_media"), is_error=True)
             return
 
         activity = self._get_activity(parent_alert)
@@ -1784,15 +1822,18 @@ class DeleteFromGalleryPlugin(BasePlugin):
             self._send_media(parent_alert)
 
             def do_delayed_delete():
-                self._execute_media_deletion(activity, resolver, uris, valid, sdk)
+                try:
+                    self._execute_media_deletion(activity, resolver, uris, valid, sdk)
+                except BaseException as e:
+                    self.log(f"[DeleteFromGallery] Delayed delete error: {e}")
 
             try:
                 run_on_ui_thread(do_delayed_delete, 400)
-            except Exception:
+            except BaseException:
                 import threading
                 threading.Timer(0.4, lambda: run_on_ui_thread(do_delayed_delete)).start()
         else:
-            self._clear_selection(layout, parent_alert, valid)
+            self._clear_selection(layout, parent_alert)
             self._execute_media_deletion(activity, resolver, uris, valid, sdk)
 
 
