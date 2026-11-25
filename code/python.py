@@ -6,7 +6,7 @@ __description__ = (
     "Добавляет кнопки «Удалить с устройства» и «Отправить и удалить» в меню выбора медиа."
 )
 __author__ = "@itNotMax - @MaxExteraPlugins"
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 __icon__ = "MaxExteraPluginsStickers/23"
 __min_version__ = "12.10.6"
 __app_version__ = ">=12.10.6"
@@ -30,36 +30,6 @@ from ui.bulletin import BulletinHelper
 DELETE_ITEM_ID = 101
 SEND_AND_DELETE_ITEM_ID = 102
 
-CONFIG_URL = "https://raw.githubusercontent.com/MaxExteraPlugins/config/main/links.json"
-
-DEFAULT_LINKS = {
-    "channel_username": "MaxExteraPlugins",
-    "channel_url": "https://t.me/MaxExteraPlugins",
-    "donate_url": "https://t.me/itNotMax",
-    "bug_report_url": "https://t.me/itNotMax",
-    "trial_days": 7,
-    "header": {
-        "ru": "MaxExteraPlugins",
-        "en": "MaxExteraPlugins"
-    },
-    "buttons": [
-        {
-            "title": {"ru": "Канал автора", "en": "Author's Channel"},
-            "icon": "msg_channel",
-            "url": "https://t.me/MaxExteraPlugins"
-        },
-        {
-            "title": {"ru": "Поддержать автора", "en": "Support author"},
-            "icon": "msg_share",
-            "url": "https://t.me/itNotMax"
-        },
-        {
-            "title": {"ru": "Сообщить о баге", "en": "Report a bug"},
-            "icon": "msg_help",
-            "url": "https://t.me/itNotMax"
-        }
-    ]
-}
 
 
 class L:
@@ -144,26 +114,7 @@ class L:
             "ru": "Напомнить позже",
             "en": "Remind later",
         },
-        "check_sub_btn": {
-            "ru": "Проверить подписку",
-            "en": "Check subscription",
-        },
-        "trial_expired_title": {
-            "ru": "Пожалуйста, подпишитесь на канал",
-            "en": "Please subscribe to the channel",
-        },
-        "trial_expired_msg": {
-            "ru": (
-                "Пожалуйста, подпишитесь на наш официальный канал.\n\n"
-                "Мы делаем плагины бесплатно, ничего не требуя взамен. "
-                "До подписки функции плагина временно приостановлены."
-            ),
-            "en": (
-                "Please subscribe to our official channel.\n\n"
-                "We develop plugins for free and ask nothing in return. "
-                "Plugin features are paused until you subscribe."
-            ),
-        },
+
         "sub_thank_you": {
             "ru": "Спасибо за подписку на наш канал!",
             "en": "Thank you for subscribing to our channel!",
@@ -233,7 +184,6 @@ class AuthorChannelHelper:
     DEFAULT_LINKS = {
         "channel_username": "MaxExteraPlugins",
         "channel_url": "https://t.me/MaxExteraPlugins",
-        "trial_days": 7,
         "header": {"ru": "MaxExteraPlugins", "en": "MaxExteraPlugins"},
         "buttons": [
             {"title": {"ru": "Канал автора", "en": "Author's Channel"}, "icon": "msg_channel", "url": "https://t.me/MaxExteraPlugins"},
@@ -243,22 +193,23 @@ class AuthorChannelHelper:
     }
 
     _TEXTS = {
-        "install_card_title": {"ru": "Спасибо за установку!", "en": "Thank you for installing!"},
+        "install_card_title": {"ru": "Подпишитесь на канал", "en": "Subscribe to channel"},
         "install_card_msg": {
-            "ru": "Надеемся, что плагин будет вам полезен!\\n\\nМы делаем плагины бесплатными и доступными для всех: пожалуйста, поддержите нас подпиской. Там будут только важные новости, обновления и розыгрыши.",
-            "en": "We hope this plugin will be useful to you!\\n\\nWe keep our plugins free and open for everyone: please support us with a subscription. We only post key news, updates, and giveaways."
+            "ru": (
+                "Мы делаем плагины бесплатными и доступными для всех: пожалуйста, "
+                "поддержите нас подпиской на официальный канал @MaxExteraPlugins.\n\n"
+                "Там публикуются обновления, важные новости и анонсы новых плагинов."
+            ),
+            "en": (
+                "We keep our plugins free and accessible for everyone: please "
+                "support us by subscribing to our official channel @MaxExteraPlugins.\n\n"
+                "Updates, news, and new plugin announcements are published there."
+            )
         },
-        "subscribe_btn": {"ru": "Подписаться", "en": "Subscribe"},
+        "open_channel_btn": {"ru": "Перейти на канал", "en": "Open channel"},
         "remind_later_btn": {"ru": "Напомнить позже", "en": "Remind later"},
-        "check_sub_btn": {"ru": "Проверить подписку", "en": "Check subscription"},
-        "trial_expired_title": {"ru": "Пожалуйста, подпишитесь на канал", "en": "Please subscribe to the channel"},
-        "trial_expired_msg": {
-            "ru": "Пожалуйста, подпишитесь на наш официальный канал.\\n\\nМы делаем плагины бесплатно, ничего не требуя взамен. До подписки функции плагина временно приостановлены.",
-            "en": "Please subscribe to our official channel.\\n\\nWe develop plugins for free and ask nothing in return. Plugin features are paused until you subscribe."
-        },
+        "never_show_btn": {"ru": "Больше не показывать", "en": "Don't show again"},
         "sub_thank_you": {"ru": "Спасибо за подписку на наш канал!", "en": "Thank you for subscribing to our channel!"},
-        "sub_thank_you_after_expired": {"ru": "Спасибо за подписку на наш канал!\\nПлагин продолжит работу!", "en": "Thank you for subscribing to our channel!\\nThe plugin will continue working!"},
-        "sub_not_found": {"ru": "Подписка не обнаружена ни на одном из аккаунтов. Пожалуйста, подпишитесь на канал.", "en": "Subscription not found on any account. Please subscribe to the channel."},
         "settings_channel": {"ru": "Канал автора", "en": "Author's Channel"},
         "settings_donate": {"ru": "Поддержать автора", "en": "Support author"},
         "settings_bug_report": {"ru": "Сообщить о баге", "en": "Report a bug"}
@@ -283,27 +234,30 @@ class AuthorChannelHelper:
         self.icon_sticker = icon_sticker or getattr(plugin, "__icon__", "MaxExteraPluginsStickers/1")
         self._stopped = False
         self._active_dialog = None
-        self._last_known_sub = None
 
     def on_load(self):
         self._stopped = False
         self._active_dialog = None
-        self._last_known_sub = None
         self._load_remote_links_async()
         self._check_initial_subscription_flow()
-        self._start_subscription_watcher()
 
     def on_event(self, event_type):
         try:
             name = str(event_type).upper()
             if name.endswith("START") or name.endswith("RESUME"):
-                self._check_subscription_change_instant()
+                if self.is_subscribed() and not self.plugin.get_setting("was_subscribed", False):
+                    self.plugin.set_setting("was_subscribed", True)
+                    self._dismiss_active_dialog()
+                    self._notify_subscribed()
         except Exception:
             pass
 
     def on_unload(self):
         self._stopped = True
         self._dismiss_active_dialog()
+
+    def is_allowed(self) -> bool:
+        return True
 
     def _get_links(self) -> dict:
         raw = self.plugin.get_setting("remote_links_cache", None)
@@ -523,33 +477,6 @@ class AuthorChannelHelper:
             pass
         return False
 
-    def is_allowed(self) -> bool:
-        import time
-        if self.plugin.get_setting("was_subscribed", False):
-            return True
-
-        if self.is_subscribed():
-            was_exp = bool(self.plugin.get_setting("was_expired_state", False))
-            self.plugin.set_setting("was_subscribed", True)
-            self.plugin.set_setting("was_expired_state", False)
-            self._notify_subscribed(was_expired=was_exp)
-            return True
-
-        now = time.time()
-        install_time = float(self.plugin.get_setting("install_time", 0.0) or 0.0)
-        if install_time <= 0:
-            install_time = now
-            self.plugin.set_setting("install_time", install_time)
-
-        trial_days = float(self._get_links().get("trial_days", 7))
-        trial_sec = trial_days * 86400.0
-
-        if (now - install_time) < trial_sec:
-            return True
-
-        self.plugin.set_setting("was_expired_state", True)
-        return False
-
     def prepend_settings(self, original_items=None) -> list:
         from ui.settings import Header, Text, Divider
 
@@ -660,86 +587,32 @@ class AuthorChannelHelper:
             pass
         return False
 
-    def _notify_subscribed(self, was_expired=False):
-        self.plugin.set_setting("was_subscribed", True)
-        self.plugin.set_setting("was_expired_state", False)
-        from ui.bulletin import BulletinHelper
-        msg_key = "sub_thank_you_after_expired" if was_expired else "sub_thank_you"
-        BulletinHelper.show_success(self.tr(msg_key))
-
-    def _check_subscription_change_instant(self):
+    def _notify_subscribed(self):
         try:
-            if not self.plugin.get_setting("was_subscribed", False):
-                if self.is_subscribed():
-                    was_exp = bool(self.plugin.get_setting("was_expired_state", False))
-                    self.plugin.set_setting("was_subscribed", True)
-                    self.plugin.set_setting("was_expired_state", False)
-                    self._dismiss_active_dialog()
-                    self._notify_subscribed(was_expired=was_exp)
+            from ui.bulletin import BulletinHelper
+            BulletinHelper.show_success(self.tr("sub_thank_you"))
         except Exception:
             pass
 
-    def _start_subscription_watcher(self):
-        def watcher_loop():
-            import time
-            from android_utils import run_on_ui_thread
-            time.sleep(5.0)
-            if self._stopped: return
-
-            while not self._stopped:
-                try:
-                    time.sleep(30.0)
-                    if self._stopped: break
-
-                    if self.plugin.get_setting("was_subscribed", False):
-                        continue
-
-                    if self.is_subscribed():
-                        was_exp = bool(self.plugin.get_setting("was_expired_state", False))
-                        self.plugin.set_setting("was_subscribed", True)
-                        self.plugin.set_setting("was_expired_state", False)
-                        def on_sub():
-                            self._dismiss_active_dialog()
-                            self._notify_subscribed(was_expired=was_exp)
-                        run_on_ui_thread(on_sub)
-                except Exception:
-                    pass
-        import threading
-        t = threading.Thread(target=watcher_loop, daemon=True)
-        t.start()
-
     def _check_initial_subscription_flow(self):
         def flow():
-            import time
             try:
-                now = time.time()
-                install_time = float(self.plugin.get_setting("install_time", 0.0) or 0.0)
-                if install_time <= 0:
-                    install_time = now
-                    self.plugin.set_setting("install_time", install_time)
+                if self.plugin.get_setting("never_show_sub_prompt", False):
+                    return
+
+                current_ver = str(getattr(self.plugin, "__version__", globals().get("__version__", "1.0.0")) or "1.0.0")
+                last_prompted_ver = self.plugin.get_setting("last_prompted_version", None)
+
+                # Only show on install (last_prompted_ver is None) or update (last_prompted_ver != current_ver)
+                if last_prompted_ver is not None and str(last_prompted_ver) == current_ver:
+                    return
 
                 if self.is_subscribed():
-                    was_exp = bool(self.plugin.get_setting("was_expired_state", False))
+                    self.plugin.set_setting("last_prompted_version", current_ver)
                     self.plugin.set_setting("was_subscribed", True)
-                    self.plugin.set_setting("was_expired_state", False)
-                    if was_exp:
-                        self._notify_subscribed(was_expired=True)
                     return
 
-                if self.plugin.get_setting("was_subscribed", False):
-                    return
-
-                trial_days = float(self._get_links().get("trial_days", 7))
-                trial_sec = trial_days * 86400.0
-
-                if (now - install_time) < trial_sec:
-                    welcome_shown = bool(self.plugin.get_setting("welcome_shown", False))
-                    if not welcome_shown:
-                        self.plugin.set_setting("welcome_shown", True)
-                        self._show_welcome_card()
-                else:
-                    self.plugin.set_setting("was_expired_state", True)
-                    self._show_expired_card()
+                self._show_subscription_prompt(current_ver)
             except Exception:
                 pass
         from android_utils import run_on_ui_thread
@@ -801,7 +674,7 @@ class AuthorChannelHelper:
         except Exception:
             return None
 
-    def _show_welcome_card(self):
+    def _show_subscription_prompt(self, current_ver: str):
         def show():
             try:
                 if self._is_dialog_active(): return
@@ -823,733 +696,38 @@ class AuthorChannelHelper:
                     b.set_title(self.tr("install_card_title"))
                     b.set_message(self.tr("install_card_msg"))
 
-                def on_sub(d, w):
+                def on_open_channel(dialog, which):
                     self._dismiss_active_dialog()
+                    self.plugin.set_setting("last_prompted_version", current_ver)
                     self._open_url(url)
-                    def check_after():
-                        if self.is_subscribed():
-                            self._notify_subscribed(was_expired=False)
-                    from android_utils import run_on_ui_thread
-                    run_on_ui_thread(check_after, 3000)
 
-                def on_later(d, w):
-                    import time
+                def on_remind_later(dialog, which):
                     self._dismiss_active_dialog()
-                    self.plugin.set_setting("last_remind_time", time.time())
+                    self.plugin.set_setting("last_prompted_version", current_ver)
 
-                b.set_positive_button(self.tr("subscribe_btn"), on_sub)
-                b.set_negative_button(self.tr("remind_later_btn"), on_later)
+                def on_never_show(dialog, which):
+                    self._dismiss_active_dialog()
+                    self.plugin.set_setting("never_show_sub_prompt", True)
+                    self.plugin.set_setting("last_prompted_version", current_ver)
+
+                b.set_positive_button(self.tr("open_channel_btn"), on_open_channel)
+                b.set_neutral_button(self.tr("remind_later_btn"), on_remind_later)
+                b.set_negative_button(self.tr("never_show_btn"), on_never_show)
+
+                def on_dismiss(builder):
+                    self.plugin.set_setting("last_prompted_version", current_ver)
+                try:
+                    b.set_on_dismiss_listener(on_dismiss)
+                except Exception:
+                    pass
+
                 self._active_dialog = b.show()
+                self.plugin.set_setting("last_prompted_version", current_ver)
             except Exception:
                 pass
         from android_utils import run_on_ui_thread
         run_on_ui_thread(show)
 
-    def _show_expired_card(self):
-        def show():
-            try:
-                if self._is_dialog_active(): return
-                from client_utils import get_last_fragment
-                frag = get_last_fragment()
-                if not frag: return
-                act = frag.getParentActivity()
-                if not act: return
-
-                links = self._get_links()
-                url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
-
-                from ui.alert import AlertDialogBuilder
-                from ui.bulletin import BulletinHelper
-                b = AlertDialogBuilder(act)
-                content = self._create_card_content(act, self.tr("trial_expired_title"), self.tr("trial_expired_msg"))
-                if content is not None:
-                    b.set_view(content)
-                else:
-                    b.set_title(self.tr("trial_expired_title"))
-                    b.set_message(self.tr("trial_expired_msg"))
-
-                def on_sub(d, w):
-                    self._dismiss_active_dialog()
-                    self._open_url(url)
-                    def check_after():
-                        if self.is_subscribed():
-                            self.plugin.set_setting("was_subscribed", True)
-                            self.plugin.set_setting("was_expired_state", False)
-                            self._notify_subscribed(was_expired=True)
-                    from android_utils import run_on_ui_thread
-                    run_on_ui_thread(check_after, 3000)
-
-                def on_check(d, w):
-                    self._dismiss_active_dialog()
-                    if self.is_subscribed():
-                        self.plugin.set_setting("was_subscribed", True)
-                        self.plugin.set_setting("was_expired_state", False)
-                        self._notify_subscribed(was_expired=True)
-                    else:
-                        BulletinHelper.show_error(self.tr("sub_not_found"))
-                        from android_utils import run_on_ui_thread
-                        run_on_ui_thread(self._show_expired_card, 500)
-
-                b.set_positive_button(self.tr("subscribe_btn"), on_sub)
-                b.set_negative_button(self.tr("check_sub_btn"), on_check)
-                self._active_dialog = b.show()
-            except Exception:
-                pass
-        from android_utils import run_on_ui_thread
-        run_on_ui_thread(show)
-class DeleteFromGalleryPlugin(BasePlugin):
-
-    def on_plugin_load(self):
-        self._author_helper = AuthorChannelHelper(self, icon_sticker="MaxExteraPluginsStickers/23")
-        self._author_helper.on_load()
-        try:
-            self._stopped = False
-            self._last_action_time = 0.0
-            self._active_dialog = None
-            self._last_known_sub = None
-            self._load_remote_links_async()
-            self._check_initial_subscription_flow()
-            self._start_subscription_watcher()
-            self._setup_hook()
-        except BaseException as e:
-            self.log(f"[DeleteFromGallery] Hook setup error: {e}")
-
-    def on_app_event(self, event_type):
-        if hasattr(self, "_author_helper"):
-            self._author_helper.on_event(event_type)
-        try:
-            name = str(event_type).upper()
-            if name.endswith("START") or name.endswith("RESUME"):
-                self._check_subscription_change_instant()
-        except BaseException as e:
-            self.log(f"[DeleteFromGallery] on_app_event error: {e}")
-
-    def on_plugin_unload(self):
-        if hasattr(self, "_author_helper"):
-            self._author_helper.on_unload()
-        try:
-            self._stopped = True
-            self._dismiss_active_dialog()
-        except BaseException:
-            pass
-
-    def _safe_notify(self, text, is_error=False):
-        def show():
-            try:
-                from org.telegram.ui.Components import BulletinFactory
-                bf = getattr(BulletinFactory, "global")()
-                if bf is not None:
-                    if is_error:
-                        b = bf.createErrorBulletin(str(text))
-                    else:
-                        b = bf.createSuccessBulletin(str(text))
-                    if b is not None:
-                        b.show()
-                        return
-            except BaseException:
-                pass
-            try:
-                from org.telegram.messenger import ApplicationLoader
-                from android.widget import Toast
-                Toast.makeText(ApplicationLoader.applicationContext, str(text), Toast.LENGTH_SHORT).show()
-            except BaseException:
-                pass
-
-        try:
-            run_on_ui_thread(show)
-        except BaseException:
-            pass
-
-    # ============================================================
-    # Central Config & Remote Links
-    # ============================================================
-    def _get_links(self) -> dict:
-        raw = self.get_setting("remote_links_cache", None)
-        if raw:
-            try:
-                data = json.loads(raw)
-                if isinstance(data, dict):
-                    return data
-            except BaseException:
-                pass
-        return DEFAULT_LINKS
-
-    def _load_remote_links_async(self):
-        def worker():
-            try:
-                req = urllib.request.Request(
-                    CONFIG_URL,
-                    headers={"User-Agent": "MaxExteraPlugins"}
-                )
-                with urllib.request.urlopen(req, timeout=4) as resp:
-                    if resp.status == 200:
-                        content = resp.read().decode("utf-8")
-                        data = json.loads(content)
-                        if isinstance(data, dict):
-                            self.set_setting("remote_links_cache", json.dumps(data))
-                            self._resolve_channel_in_telegram(data.get("channel_username", "MaxExteraPlugins"))
-            except BaseException as e:
-                self.log(f"[DeleteFromGallery] Remote config load note: {e}")
-
-        t = threading.Thread(target=worker, daemon=True)
-        t.start()
-
-    def _open_url(self, url: str, view=None):
-        try:
-            from org.telegram.messenger.browser import Browser
-            from org.telegram.messenger import ApplicationLoader
-            ctx = None
-            if view is not None:
-                ctx = view.getContext()
-            if ctx is None:
-                frag = get_last_fragment()
-                if frag is not None:
-                    ctx = frag.getParentActivity()
-            if ctx is None:
-                ctx = ApplicationLoader.applicationContext
-            Browser.openUrl(ctx, url)
-        except BaseException as e:
-            self.log(f"[DeleteFromGallery] Open URL error: {e}")
-
-    # ============================================================
-    # Settings UI
-    # ============================================================
-    def create_settings(self):
-        try:
-            items = self._inner_create_settings()
-        except BaseException:
-            items = []
-        if hasattr(self, '_author_helper'):
-            return self._author_helper.prepend_settings(items)
-        return items
-
-    def _inner_create_settings(self):
-        links = self._get_links()
-        buttons_config = links.get("buttons")
-
-        author_items = []
-
-        if isinstance(buttons_config, list):
-            for btn in buttons_config:
-                if not isinstance(btn, dict):
-                    continue
-                url = str(btn.get("url") or "").strip()
-                if not url:
-                    continue
-
-                title_data = btn.get("title")
-                if isinstance(title_data, dict):
-                    title = title_data.get("ru" if L.is_ru() else "en") or title_data.get("en") or title_data.get("ru") or ""
-                elif isinstance(title_data, str) and title_data:
-                    title = title_data
-                else:
-                    title = btn.get("title_ru" if L.is_ru() else "title_en") or btn.get("title_ru") or btn.get("title_en") or ""
-
-                if not title:
-                    continue
-
-                icon = str(btn.get("icon") or "msg_channel").strip()
-
-                def make_click(target_url):
-                    return lambda v=None: self._open_url(target_url, v)
-
-                author_items.append(
-                    Text(
-                        text=title,
-                        icon=icon,
-                        on_click=make_click(url),
-                    )
-                )
-        else:
-            channel_url = str(links.get("channel_url") or "").strip()
-            donate_url = str(links.get("donate_url") or "").strip()
-            bug_url = str(links.get("bug_report_url") or "").strip()
-
-            if channel_url:
-                author_items.append(
-                    Text(
-                        text=L.g("settings_channel"),
-                        icon="msg_channel",
-                        on_click=lambda v=None, u=channel_url: self._open_url(u, v),
-                    )
-                )
-
-            if donate_url:
-                author_items.append(
-                    Text(
-                        text=L.g("settings_donate"),
-                        icon="msg_share",
-                        on_click=lambda v=None, u=donate_url: self._open_url(u, v),
-                    )
-                )
-
-            if bug_url:
-                author_items.append(
-                    Text(
-                        text=L.g("settings_bug_report"),
-                        icon="msg_help",
-                        on_click=lambda v=None, u=bug_url: self._open_url(u, v),
-                    )
-                )
-
-        items = []
-        if author_items:
-            hdr = links.get("header") or "MaxExteraPlugins"
-            if isinstance(hdr, dict):
-                hdr_text = hdr.get("ru" if L.is_ru() else "en") or hdr.get("ru") or hdr.get("en") or "MaxExteraPlugins"
-            else:
-                hdr_text = str(hdr)
-
-            items.append(Header(text=hdr_text))
-            items.extend(author_items)
-            items.append(Divider())
-
-        return items
-
-    # ============================================================
-    # Card Content with Centered Plugin Sticker View
-    # ============================================================
-    def _create_card_content(self, act, title_text, message_text):
-        try:
-            from android.widget import LinearLayout, TextView
-            from android.view import Gravity
-            from android.graphics import Typeface
-            from org.telegram.messenger import AndroidUtilities, UserConfig, MediaDataController
-            from org.telegram.ui.ActionBar import Theme
-            from org.telegram.ui.Components import BackupImageView
-
-            dp = AndroidUtilities.dp
-
-            layout = LinearLayout(act)
-            layout.setOrientation(LinearLayout.VERTICAL)
-            layout.setGravity(Gravity.CENTER_HORIZONTAL)
-            layout.setPadding(dp(24), dp(16), dp(24), dp(6))
-
-            # 1. Sticker icon (BackupImageView)
-            size = dp(76)
-            iv = BackupImageView(act)
-            iv.setRoundRadius(dp(18))
-            lp_iv = LinearLayout.LayoutParams(size, size)
-            lp_iv.gravity = Gravity.CENTER_HORIZONTAL
-            lp_iv.setMargins(0, dp(4), 0, dp(16))
-            iv.setLayoutParams(lp_iv)
-
-            try:
-                acc = int(UserConfig.selectedAccount)
-                mdc = MediaDataController.getInstance(acc)
-                raw_icon = str(__icon__)
-                if "/" in raw_icon:
-                    pack, idx_s = raw_icon.split("/", 1)
-                    mdc.setPlaceholderImageByIndex(iv, pack, int(idx_s), "150_150")
-            except BaseException as e:
-                self.log(f"[DeleteFromGallery] Sticker load note: {e}")
-
-            layout.addView(iv)
-
-            # 2. Title
-            if title_text:
-                title_tv = TextView(act)
-                title_tv.setText(title_text)
-                title_tv.setTextSize(19.0)
-                title_tv.setTypeface(None, Typeface.BOLD)
-                title_tv.setTextColor(Theme.getColor(Theme.key_dialogTextBlack))
-                title_tv.setGravity(Gravity.CENTER_HORIZONTAL)
-                lp_t = LinearLayout.LayoutParams(-1, -2)
-                lp_t.setMargins(0, 0, 0, dp(12))
-                title_tv.setLayoutParams(lp_t)
-                layout.addView(title_tv)
-
-            # 3. Message
-            if message_text:
-                msg_tv = TextView(act)
-                msg_tv.setText(message_text)
-                msg_tv.setTextSize(15.0)
-                msg_tv.setTextColor(Theme.getColor(Theme.key_dialogTextBlack))
-                msg_tv.setLineSpacing(float(dp(3)), 1.0)
-                msg_tv.setGravity(Gravity.CENTER_HORIZONTAL)
-                lp_m = LinearLayout.LayoutParams(-1, -2)
-                msg_tv.setLayoutParams(lp_m)
-                layout.addView(msg_tv)
-
-            return layout
-        except BaseException as e:
-            self.log(f"[DeleteFromGallery] Card content error: {e}")
-            return None
-
-    # ============================================================
-    # Subscription & Trial Check
-    # ============================================================
-    def _resolve_channel_in_telegram(self, username: str):
-        try:
-            from org.telegram.messenger import UserConfig, MessagesController
-            from org.telegram.tgnet import TLRPC, ConnectionsManager, RequestDelegate
-
-            clean_user = username.lstrip("@")
-            acc = int(UserConfig.selectedAccount)
-            mc = MessagesController.getInstance(acc)
-            if not mc:
-                return
-
-            req = TLRPC.TL_contacts_resolveUsername()
-            req.username = clean_user
-
-            plugin_ref = self
-
-            class Delegate(RequestDelegate):
-                def run(self, response, error):
-                    if error is None and response is not None:
-                        chats = getattr(response, "chats", None)
-                        if chats is not None and chats.size() > 0:
-                            mc.putChats(chats, False)
-                            c = chats.get(0)
-                            cid = getattr(c, "id", 0)
-                            if cid > 0:
-                                plugin_ref.set_setting("resolved_channel_id", int(cid))
-
-            ConnectionsManager.getInstance(acc).sendRequest(req, Delegate())
-        except BaseException:
-            pass
-
-    def is_subscribed_to_channel(self) -> bool:
-        try:
-            from org.telegram.messenger import UserConfig, MessagesController
-            links = self._get_links()
-            target = links.get("channel_username", "MaxExteraPlugins").lower().lstrip("@")
-            saved_cid = self.get_setting("resolved_channel_id", 0)
-
-            for acc in range(UserConfig.MAX_ACCOUNT_COUNT):
-                uconf = UserConfig.getInstance(acc)
-                if not uconf.isClientActivated():
-                    continue
-
-                mc = MessagesController.getInstance(acc)
-                if not mc:
-                    continue
-
-                # 1. Check by saved channel ID
-                if saved_cid:
-                    try:
-                        from java.lang import Long as JLong
-                        c = mc.getChat(JLong(int(saved_cid)))
-                        if c is not None:
-                            left = bool(getattr(c, "left", True))
-                            kicked = bool(getattr(c, "kicked", False))
-                            if not left and not kicked:
-                                return True
-                    except BaseException:
-                        pass
-
-                # 2. Check by username lookup in MessagesController
-                try:
-                    chat = mc.getUserOrChat(target)
-                    if chat is not None:
-                        cid = getattr(chat, "id", 0)
-                        if cid and not saved_cid:
-                            self.set_setting("resolved_channel_id", int(cid))
-                        left = bool(getattr(chat, "left", True))
-                        kicked = bool(getattr(chat, "kicked", False))
-                        if not left and not kicked:
-                            return True
-                except BaseException:
-                    pass
-
-                # 3. Check dialogs list
-                try:
-                    dialogs = mc.allDialogs
-                    if dialogs is not None:
-                        limit = min(dialogs.size(), 300)
-                        for i in range(limit):
-                            d = dialogs.get(i)
-                            did = getattr(d, "id", 0)
-                            if did < 0:
-                                from java.lang import Long as JLong
-                                c = mc.getChat(JLong(-did))
-                                if c is not None:
-                                    uname = str(getattr(c, "username", "") or "").lower()
-                                    if uname == target:
-                                        cid = getattr(c, "id", 0)
-                                        if cid and not saved_cid:
-                                            self.set_setting("resolved_channel_id", int(cid))
-                                        left = bool(getattr(c, "left", True))
-                                        kicked = bool(getattr(c, "kicked", False))
-                                        if not left and not kicked:
-                                            return True
-                except BaseException:
-                    pass
-        except BaseException as e:
-            self.log(f"[DeleteFromGallery] is_subscribed error: {e}")
-        return False
-
-    def _notify_subscribed(self, was_expired=False):
-        self.set_setting("was_subscribed", True)
-        msg_key = "sub_thank_you_after_expired" if was_expired else "sub_thank_you"
-        self._safe_notify(L.g(msg_key), is_error=False)
-
-    def _dismiss_active_dialog(self):
-        try:
-            if self._active_dialog is not None:
-                self._active_dialog.dismiss()
-        except BaseException:
-            pass
-        self._active_dialog = None
-
-    def _is_dialog_active(self) -> bool:
-        try:
-            if self._active_dialog is not None:
-                return bool(self._active_dialog.isShowing())
-        except BaseException:
-            pass
-        return False
-
-    def _check_subscription_change_instant(self):
-        try:
-            cur_sub = self.is_subscribed_to_channel()
-            prev_sub = self._last_known_sub
-            if prev_sub is not None and prev_sub != cur_sub:
-                self._last_known_sub = cur_sub
-                if cur_sub:
-                    was_exp = bool(self.get_setting("was_expired_state", False))
-                    self.set_setting("was_subscribed", True)
-                    self.set_setting("was_expired_state", False)
-                    self._dismiss_active_dialog()
-                    self._notify_subscribed(was_expired=was_exp)
-                else:
-                    self.set_setting("was_subscribed", False)
-                    self.set_setting("was_expired_state", True)
-                    self._dismiss_active_dialog()
-                    self._show_expired_card()
-            else:
-                self._last_known_sub = cur_sub
-        except BaseException as e:
-            self.log(f"[DeleteFromGallery] instant check note: {e}")
-
-    def _start_subscription_watcher(self):
-        def watcher_loop():
-            time.sleep(2.0)
-            if self._stopped:
-                return
-
-            self._last_known_sub = self.is_subscribed_to_channel()
-
-            while not self._stopped:
-                try:
-                    time.sleep(2.0)
-                    if self._stopped:
-                        break
-
-                    cur_sub = self.is_subscribed_to_channel()
-                    prev_sub = self._last_known_sub
-
-                    if prev_sub is not None and prev_sub != cur_sub:
-                        self.log(f"[DeleteFromGallery] Subscription status changed: {prev_sub} -> {cur_sub}")
-                        self._last_known_sub = cur_sub
-
-                        if cur_sub:
-                            was_exp = bool(self.get_setting("was_expired_state", False))
-                            self.set_setting("was_subscribed", True)
-                            self.set_setting("was_expired_state", False)
-
-                            def on_sub_ui():
-                                self._dismiss_active_dialog()
-                                self._notify_subscribed(was_expired=was_exp)
-
-                            run_on_ui_thread(on_sub_ui)
-                        else:
-                            self.set_setting("was_subscribed", False)
-                            self.set_setting("was_expired_state", True)
-
-                            def on_unsub_ui():
-                                self._dismiss_active_dialog()
-                                self._show_expired_card()
-
-                            run_on_ui_thread(on_unsub_ui)
-                    else:
-                        self._last_known_sub = cur_sub
-
-                except BaseException as e:
-                    self.log(f"[DeleteFromGallery] Watcher loop error: {e}")
-
-        t = threading.Thread(target=watcher_loop, daemon=True)
-        t.start()
-
-    def _check_initial_subscription_flow(self):
-        def flow():
-            try:
-                now = time.time()
-                install_time = float(self.get_setting("install_time", 0.0) or 0.0)
-                if install_time <= 0:
-                    install_time = now
-                    self.set_setting("install_time", install_time)
-
-                is_sub = self.is_subscribed_to_channel()
-                self._last_known_sub = is_sub
-                was_sub = bool(self.get_setting("was_subscribed", False))
-                was_expired = bool(self.get_setting("was_expired_state", False))
-
-                if is_sub:
-                    if not was_sub:
-                        self.set_setting("was_subscribed", True)
-                        self.set_setting("was_expired_state", False)
-                        self._notify_subscribed(was_expired=was_expired)
-                    return
-
-                if was_sub or was_expired:
-                    self.set_setting("was_subscribed", False)
-                    self.set_setting("was_expired_state", True)
-                    self._show_expired_card()
-                    return
-
-                trial_days = float(self._get_links().get("trial_days", 7))
-                trial_sec = trial_days * 86400.0
-                last_remind = float(self.get_setting("last_remind_time", 0.0) or 0.0)
-
-                if (now - install_time) < trial_sec:
-                    if last_remind <= 0 or (now - last_remind) >= trial_sec:
-                        self._show_welcome_card()
-                else:
-                    self.set_setting("was_expired_state", True)
-                    self._show_expired_card()
-
-            except BaseException as e:
-                self.log(f"[DeleteFromGallery] Initial flow error: {e}")
-
-        run_on_ui_thread(flow, 1500)
-
-    def is_feature_allowed(self) -> bool:
-        if self.is_subscribed_to_channel():
-            if not self.get_setting("was_subscribed", False):
-                was_expired = bool(self.get_setting("was_expired_state", False))
-                self.set_setting("was_subscribed", True)
-                self.set_setting("was_expired_state", False)
-                self._notify_subscribed(was_expired=was_expired)
-            return True
-
-        if self.get_setting("was_expired_state", False) or self.get_setting("was_subscribed", False):
-            self.set_setting("was_subscribed", False)
-            self.set_setting("was_expired_state", True)
-            self._show_expired_card()
-            return False
-
-        now = time.time()
-        install_time = float(self.get_setting("install_time", 0.0) or 0.0)
-        if install_time <= 0:
-            install_time = now
-            self.set_setting("install_time", install_time)
-
-        trial_days = float(self._get_links().get("trial_days", 7))
-        trial_sec = trial_days * 86400.0
-
-        if (now - install_time) < trial_sec:
-            return True
-
-        self.set_setting("was_expired_state", True)
-        self._show_expired_card()
-        return False
-
-    def _show_welcome_card(self):
-        def show():
-            try:
-                if self._is_dialog_active():
-                    return
-                frag = get_last_fragment()
-                if not frag: return
-                act = frag.getParentActivity()
-                if not act: return
-
-                links = self._get_links()
-                url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
-
-                b = AlertDialogBuilder(act)
-                content = self._create_card_content(act, L.g("install_card_title"), L.g("install_card_msg"))
-                if content is not None:
-                    b.set_view(content)
-                else:
-                    b.set_title(L.g("install_card_title"))
-                    b.set_message(L.g("install_card_msg"))
-
-                def on_sub(d, w):
-                    self._dismiss_active_dialog()
-                    self._open_url(url)
-                    def check_after():
-                        if self.is_subscribed_to_channel():
-                            self._notify_subscribed(was_expired=False)
-                    run_on_ui_thread(check_after, 3000)
-
-                def on_later(d, w):
-                    self._dismiss_active_dialog()
-                    self.set_setting("last_remind_time", time.time())
-
-                b.set_positive_button(L.g("subscribe_btn"), on_sub)
-                b.set_negative_button(L.g("remind_later_btn"), on_later)
-                self._active_dialog = b.show()
-            except BaseException as e:
-                self.log(f"[DeleteFromGallery] Welcome card error: {e}")
-
-        run_on_ui_thread(show)
-
-    def _show_expired_card(self):
-        def show():
-            try:
-                if self._is_dialog_active():
-                    return
-                frag = get_last_fragment()
-                if not frag: return
-                act = frag.getParentActivity()
-                if not act: return
-
-                links = self._get_links()
-                url = links.get("channel_url", "https://t.me/MaxExteraPlugins")
-
-                b = AlertDialogBuilder(act)
-                content = self._create_card_content(act, L.g("trial_expired_title"), L.g("trial_expired_msg"))
-                if content is not None:
-                    b.set_view(content)
-                else:
-                    b.set_title(L.g("trial_expired_title"))
-                    b.set_message(L.g("trial_expired_msg"))
-
-                def on_sub(d, w):
-                    self._dismiss_active_dialog()
-                    self._open_url(url)
-                    def check_after():
-                        if self.is_subscribed_to_channel():
-                            self.set_setting("was_subscribed", True)
-                            self.set_setting("was_expired_state", False)
-                            self._notify_subscribed(was_expired=True)
-                    run_on_ui_thread(check_after, 3000)
-
-                def on_check(d, w):
-                    self._dismiss_active_dialog()
-                    if self.is_subscribed_to_channel():
-                        self.set_setting("was_subscribed", True)
-                        self.set_setting("was_expired_state", False)
-                        self._notify_subscribed(was_expired=True)
-                    else:
-                        self._safe_notify(L.g("sub_not_found"), is_error=True)
-                        run_on_ui_thread(self._show_expired_card, 500)
-
-                b.set_positive_button(L.g("subscribe_btn"), on_sub)
-                b.set_negative_button(L.g("check_sub_btn"), on_check)
-                self._active_dialog = b.show()
-            except BaseException as e:
-                self.log(f"[DeleteFromGallery] Expired card error: {e}")
-
-        run_on_ui_thread(show)
-
-    # ============================================================
-    # Hook & Actions
-    # ============================================================
-    def _setup_hook(self):
-        from java.lang import Class, Integer as JInt
-
-        plugin_ref = self
-        clazz = Class.forName("org.telegram.ui.Components.ChatAttachAlertPhotoLayout")
-
-        try:
-            count_method = clazz.getDeclaredMethod("onSelectedItemsCountChanged", JInt.TYPE)
-        except BaseException:
-            count_method = clazz.getMethod("onSelectedItemsCountChanged", JInt.TYPE)
-        count_method.setAccessible(True)
 
         class CountHook(MethodHook):
             def after_hooked_method(self, param):
@@ -1662,8 +840,6 @@ class DeleteFromGalleryPlugin(BasePlugin):
         self._last_action_time = now
 
         try:
-            if not self.is_feature_allowed():
-                return
             self._perform_delete(layout, parent_alert, send_first=send_first)
         except BaseException as e:
             self.log(f"[DeleteFromGallery] Action error: {e}")
