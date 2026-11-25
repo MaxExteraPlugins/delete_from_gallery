@@ -6,7 +6,7 @@ __description__ = (
     "Добавляет кнопки «Удалить с устройства» и «Отправить и удалить» в меню выбора медиа."
 )
 __author__ = "@itNotMax - @MaxExteraPlugins"
-__version__ = "1.2.3"
+__version__ = "1.2.4"
 __icon__ = "MaxExteraPluginsStickers/23"
 __min_version__ = "12.10.6"
 __app_version__ = ">=12.10.6"
@@ -69,6 +69,10 @@ class L:
         "cannot_delete_files": {
             "ru": "Не удалось удалить файлы",
             "en": "Could not delete files",
+        },
+        "failed_send_media": {
+            "ru": "Не удалось отправить медиа",
+            "en": "Failed to send media",
         },
         "settings_channel": {
             "ru": "Канал автора",
@@ -936,20 +940,53 @@ class DeleteFromGalleryPlugin(BasePlugin):
             self.log(f"[DeleteFromGallery] Album cleanup error: {e}")
 
     def _send_media(self, parent_alert):
+        sent = False
+
+        # 1. Try writeButton performClick (native send button in ChatAttachAlert)
         try:
-            photo_layout = getattr(parent_alert, "photoLayout", None)
-            if photo_layout is not None:
-                try:
-                    photo_layout.sendSelectedPhotos(False)
-                    return
-                except BaseException:
-                    pass
-            parent_alert.sendPressed(True, 0)
-        except BaseException:
+            write_btn = get_private_field(parent_alert, "writeButton")
+            if write_btn is not None:
+                write_btn.performClick()
+                sent = True
+        except BaseException as e:
+            self.log(f"[DeleteFromGallery] writeButton performClick note: {e}")
+
+        # 2. Try doneItem performClick (tablets/alternate UI)
+        if not sent:
             try:
-                parent_alert.sendPressed(True, 0)
+                done_item = getattr(parent_alert, "doneItem", None)
+                if done_item is not None:
+                    done_item.performClick()
+                    sent = True
             except BaseException as e:
-                self.log(f"[DeleteFromGallery] Send media error: {e}")
+                self.log(f"[DeleteFromGallery] doneItem performClick note: {e}")
+
+        # 3. Try onWriteButtonPressed() reflection invocation
+        if not sent:
+            try:
+                method = parent_alert.getClass().getDeclaredMethod("onWriteButtonPressed")
+                method.setAccessible(True)
+                method.invoke(parent_alert)
+                sent = True
+            except BaseException as e:
+                self.log(f"[DeleteFromGallery] onWriteButtonPressed invocation note: {e}")
+
+        # 4. Try sendPressed(boolean, int, int, long, boolean) reflection invocation
+        if not sent:
+            try:
+                from java.lang import Long as JLong
+                for m in parent_alert.getClass().getDeclaredMethods():
+                    if m.getName() == "sendPressed":
+                        m.setAccessible(True)
+                        types = m.getParameterTypes()
+                        if len(types) == 5:
+                            m.invoke(parent_alert, True, 0, 0, JLong(0), False)
+                            sent = True
+                            break
+            except BaseException as e:
+                self.log(f"[DeleteFromGallery] sendPressed invocation note: {e}")
+
+        return sent
 
     def _clear_selection(self, layout, parent_alert):
         def do_clear():
@@ -974,6 +1011,8 @@ class DeleteFromGalleryPlugin(BasePlugin):
 
     def _execute_media_deletion(self, activity, resolver, uris, valid, sdk):
         try:
+            if activity is None:
+                activity = self._get_activity(None)
             if sdk >= 30:
                 try:
                     from android.provider import MediaStore
@@ -1071,7 +1110,10 @@ class DeleteFromGalleryPlugin(BasePlugin):
         activity = self._get_activity(parent_alert)
 
         if send_first:
-            self._send_media(parent_alert)
+            sent = self._send_media(parent_alert)
+            if not sent:
+                self._safe_notify(L.g("failed_send_media"), is_error=True)
+                return
 
             def do_delayed_delete():
                 try:
@@ -1080,10 +1122,10 @@ class DeleteFromGalleryPlugin(BasePlugin):
                     self.log(f"[DeleteFromGallery] Delayed delete error: {e}")
 
             try:
-                run_on_ui_thread(do_delayed_delete, 400)
+                run_on_ui_thread(do_delayed_delete, 600)
             except BaseException:
                 import threading
-                threading.Timer(0.4, lambda: run_on_ui_thread(do_delayed_delete)).start()
+                threading.Timer(0.6, lambda: run_on_ui_thread(do_delayed_delete)).start()
         else:
             self._clear_selection(layout, parent_alert)
             self._execute_media_deletion(activity, resolver, uris, valid, sdk)
