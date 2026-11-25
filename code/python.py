@@ -6,7 +6,7 @@ __description__ = (
     "Добавляет кнопки «Удалить с устройства» и «Отправить и удалить» в меню выбора медиа."
 )
 __author__ = "@itNotMax - @MaxExteraPlugins"
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 __icon__ = "MaxExteraPluginsStickers/23"
 __min_version__ = "12.10.6"
 __app_version__ = ">=12.10.6"
@@ -728,6 +728,42 @@ class AuthorChannelHelper:
         from android_utils import run_on_ui_thread
         run_on_ui_thread(show)
 
+
+class DeleteFromGalleryPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self._author_helper = AuthorChannelHelper(self, icon_sticker=globals().get("__icon__", "MaxExteraPluginsStickers/23"))
+        self._author_helper.on_load()
+        try:
+            self._setup_hook()
+        except BaseException as e:
+            self.log(f"[DeleteFromGallery] Hook setup error: {e}")
+
+    def on_app_event(self, event_type):
+        if hasattr(self, "_author_helper"):
+            self._author_helper.on_event(event_type)
+
+    def on_plugin_unload(self):
+        if hasattr(self, "_author_helper"):
+            self._author_helper.on_unload()
+
+    def create_settings(self):
+        items = []
+        if hasattr(self, "_author_helper"):
+            return self._author_helper.prepend_settings(items)
+        return items
+
+    def _setup_hook(self):
+        from java.lang import Class, Integer as JInt
+
+        plugin_ref = self
+        clazz = Class.forName("org.telegram.ui.Components.ChatAttachAlertPhotoLayout")
+
+        try:
+            count_method = clazz.getDeclaredMethod("onSelectedItemsCountChanged", JInt.TYPE)
+        except BaseException:
+            count_method = clazz.getMethod("onSelectedItemsCountChanged", JInt.TYPE)
+        count_method.setAccessible(True)
 
         class CountHook(MethodHook):
             def after_hooked_method(self, param):
